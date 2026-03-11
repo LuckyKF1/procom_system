@@ -1,0 +1,64 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-graph-up-arrow me-2"></i> ລາຍງານການຂາຍ</h2>
+        <button onclick="window.print()" class="btn btn-outline-dark border-0 shadow-sm bg-white">
+            <i class="bi bi-printer me-2"></i> ພິມລາຍງານ
+        </button>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-4 bg-primary text-white">
+                <div class="small opacity-75">ຍອດຂາຍທັງໝົດໃນລະບົບ</div>
+                <h1 class="fw-bold mb-0">{{ total_sales_amount|floatformat:0 }} <small class="fs-6">LAK</small></h1>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-4 bg-dark text-white">
+                <div class="small opacity-75">ຈຳນວນບິນທັງໝົດ</div>
+                <h1 class="fw-bold mb-0">{{ total_orders }} <small class="fs-6">ໃບບິນ</small></h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">ລາຍການການຂາຍຫຼ້າສຸດ</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ວັນທີ/ເວລາ</th>
+                            <th>ເລກທີບິນ</th>
+                            <th>ຜູ້ຂาย</th>
+                            <th class="text-end">ຍອດລວມ (LAK)</th>
+                            <th class="text-center">ຈັດການ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in sales %}
+                        <tr>
+                            <td>{{ s.sale_date|date:"d/m/Y H:i" }}</td>
+                            <td class="fw-bold text-primary">{{ s.sale_id }}</td>
+                            <td>{{ s.emp.emp_name }}</td>
+                            <td class="text-end fw-bold">{{ s.total_amount|floatformat:0 }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'receipt' s.sale_id %}" class="btn btn-sm btn-light rounded-pill">
+                                    <i class="bi bi-eye"></i> ເບິ່ງບິນ
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">ຍັງບໍ່ມີຂໍ້ມູນການຂาย</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

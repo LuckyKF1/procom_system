@@ -2,31 +2,35 @@
 {% block content %}
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="card p-3 shadow-sm">
+        <div class="card p-3 shadow-sm border-0">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="fw-bold mb-0">📦 ເລືອກສິນຄ້າ</h4>
-                <div class="input-group style="max-width: 300px;">
+                <div class="input-group" style="max-width: 300px;">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
                     <input type="text" class="form-control border-start-0" placeholder="ຄົ້ນຫາສິນຄ້າ...">
                 </div>
             </div>
             
-            <div class="row row-cols-1 row-cols-md-3 g-3" style="max-height: 70vh; overflow-y: auto;">
+            <div class="row row-cols-1 row-cols-md-3 g-3" style="max-height: 75vh; overflow-y: auto;">
                 {% for p in products %}
                 <div class="col">
                     <div class="card h-100 border shadow-sm">
                         <div class="card-body text-center d-flex flex-column">
                             <span class="badge bg-light text-secondary mb-2 align-self-start">{{ p.cat.cat_name }}</span>
-                            <h6 class="card-title fw-bold">{{ p.pro_name }}</h6>
+                            <h6 class="card-title fw-bold text-dark">{{ p.pro_name }}</h6>
                             <div class="mt-auto">
                                 <p class="text-primary fs-5 fw-bold mb-1">{{ p.price_sale|floatformat:0 }} LAK</p>
-                                <p class="small text-muted mb-3">ຄົງເຫຼືອ: {{ p.qty }}</p>
-                                <a href="{% url 'add_to_cart' p.pro_id %}" class="btn btn-primary w-100 rounded-pill">
+                                <p class="small text-muted mb-3">ຄົງເຫຼືອ: {{ p.qty }} {{ p.unit.unit_name }}</p>
+                                <a href="{% url 'add_to_cart' p.pro_id %}" class="btn btn-primary w-100 rounded-pill shadow-sm">
                                     <i class="bi bi-plus-lg"></i> ເພີ່ມລົງກະຕ່າ
                                 </a>
                             </div>
                         </div>
                     </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">ຍັງບໍ່ມີສິນຄ້າໃນລະບົບ</p>
                 </div>
                 {% endfor %}
             </div>
@@ -34,10 +38,12 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="card shadow-sm sticky-top" style="top: 20px;">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <div class="card shadow-sm sticky-top border-0" style="top: 20px;">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                 <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-receipt me-2"></i>ໃບບິນຊົ່ວຄາວ</h5>
-                <a href="{% url 'clear_cart' %}" class="text-danger text-decoration-none small"><i class="bi bi-trash3"></i> ລ້າງ</a>
+                <a href="{% url 'clear_cart' %}" class="text-danger text-decoration-none small fw-bold">
+                    <i class="bi bi-trash3"></i> ລ້າງກະຕ່າ
+                </a>
             </div>
             <div class="card-body p-0">
                 <div class="cart-items px-3" style="min-height: 300px; max-height: 400px; overflow-y: auto;">
@@ -45,11 +51,11 @@
                         <tbody>
                             {% for id, item in request.session.cart.items %}
                             <tr class="border-bottom">
-                                <td style="width: 60%;">
-                                    <div class="fw-bold">{{ item.name }}</div>
+                                <td style="width: 65%;">
+                                    <div class="fw-bold text-dark">{{ item.name }}</div>
                                     <small class="text-muted">{{ item.price|floatformat:0 }} x {{ item.quantity }}</small>
                                 </td>
-                                <td class="text-end fw-bold text-dark">
+                                <td class="text-end fw-bold text-primary">
                                     {{ item.price|floatformat:0 }}
                                 </td>
                             </tr>
@@ -57,7 +63,7 @@
                             <tr>
                                 <td colspan="2" class="text-center py-5 text-muted">
                                     <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
-                                    ຍັງບໍ່ມີສິນຄ້າໃດໆ
+                                    ຍັງບໍ່ມີສິນຄ້າໃນກະຕ່າ
                                 </td>
                             </tr>
                             {% endfor %}
@@ -68,15 +74,20 @@
                 <div class="p-3 bg-light rounded-bottom">
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-secondary">ລວມເປັນເງິນ:</span>
-                        <span class="fw-bold">0 LAK</span>
+                        <span class="fw-bold">{{ total_price|floatformat:0 }} LAK</span>
                     </div>
                     <div class="d-flex justify-content-between fs-4 fw-bold text-success mb-3">
                         <span>ທັງໝົດ:</span>
-                        <span>0 LAK</span>
+                        <span>{{ total_price|floatformat:0 }} LAK</span>
                     </div>
-                    <button class="btn btn-success btn-lg w-100 rounded-3 shadow" {% if not request.session.cart %}disabled{% endif %}>
-                        <i class="bi bi-cash-stack me-2"></i> ຊຳລະເງິນ
-                    </button>
+
+                    <form action="{% url 'checkout' %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-lg w-100 rounded-3 shadow fw-bold" 
+                                {% if not request.session.cart %}disabled{% endif %}>
+                            <i class="bi bi-cash-stack me-2"></i> ຊຳລະເງິນ
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

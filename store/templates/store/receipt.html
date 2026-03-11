@@ -1,0 +1,66 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container d-flex justify-content-center">
+    <div class="card shadow-sm border-0 p-4" style="width: 450px; background-color: #fff;">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold text-dark">PROCOM SYSTEM</h3>
+            <p class="text-muted mb-0 small">ໃບບິນຮັບເງິນ / Receipt</p>
+            <hr class="border-secondary opacity-25">
+        </div>
+
+        <div class="row small mb-3">
+            <div class="col-6 text-start text-muted">ເລກທີບິນ:</div>
+            <div class="col-6 text-end fw-bold">{{ sale.sale_id }}</div>
+            <div class="col-6 text-start text-muted">ວັນທີ:</div>
+            <div class="col-6 text-end">{{ sale.sale_date|date:"d/m/Y H:i" }}</div>
+            <div class="col-6 text-start text-muted">ຜູ້ຂາຍ:</div>
+            <div class="col-6 text-end">{{ sale.emp.emp_name }}</div>
+        </div>
+
+        <table class="table table-sm table-borderless small mb-4">
+            <thead class="border-bottom border-top">
+                <tr>
+                    <th class="py-2">ລາຍການ</th>
+                    <th class="py-2 text-center">ຈຳນວນ</th>
+                    <th class="py-2 text-end">ລາຄາລວມ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in details %}
+                <tr>
+                    <td class="py-1">{{ item.pro.pro_name }}</td>
+                    <td class="py-1 text-center">x{{ item.qty }}</td>
+                    <td class="py-1 text-end">{{ item.price|floatformat:0 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="border-top pt-3">
+            <div class="d-flex justify-content-between fs-4 fw-bold text-dark">
+                <span>ລວມທັງໝົດ:</span>
+                <span class="text-primary">{{ sale.total_amount|floatformat:0 }} LAK</span>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 no-print">
+            <button onclick="window.print()" class="btn btn-outline-dark rounded-pill me-2">
+                <i class="bi bi-printer me-2"></i> ພິມໃບບິນ
+            </button>
+            <a href="{% url 'pos' %}" class="btn btn-primary rounded-pill">
+                ຂາຍຕໍ່ <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+        
+        <p class="text-center text-muted small mt-4 opacity-50 italic">ຂອບໃຈທີ່ໃຊ້ບໍລິການ</p>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .navbar, .no-print { display: none !important; }
+        body { background: white !important; }
+        .card { box-shadow: none !important; width: 100% !important; margin-top: 0 !important; }
+    </div>
+</style>
+{% endblock %}

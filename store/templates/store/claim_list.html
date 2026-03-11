@@ -1,0 +1,54 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-tools me-2"></i> ລາຍການເຄມສິນຄ້າ</h2>
+        <a href="{% url 'add_claim' %}" class="btn btn-primary rounded-pill shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i> ເພີ່ມລາຍການເຄມ
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ວັນທີເຄມ</th>
+                        <th>ລະຫັດເຄມ</th>
+                        <th>ຊື່ສິນຄ້າ</th>
+                        <th>ລູກຄ້າ</th>
+                        <th>ສະຖານະ</th>
+                        <th>ຈັດການ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in claims %}
+                    <tr>
+                        <td>{{ c.claim_date|date:"d/m/Y" }}</td>
+                        <td class="fw-bold">{{ c.claim_id }}</td>
+                        <td>{{ c.pro.pro_name }}</td>
+                        <td>{{ c.cus.cus_name }}</td>
+                        <td>
+                            {% if c.status == 'Processing' %}
+                                <span class="badge bg-warning text-dark px-3 rounded-pill">ກຳລັງດຳເນີນການ</span>
+                            {% elif c.status == 'Completed' %}
+                                <span class="badge bg-success px-3 rounded-pill">ສຳເລັດແລ້ວ</span>
+                            {% else %}
+                                <span class="badge bg-danger px-3 rounded-pill">ຍົກເລີກ</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill">ອັບເດດ</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">ຍັງບໍ່ມີລາຍການເຄມສິນຄ້າ</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
