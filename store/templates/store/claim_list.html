@@ -43,31 +43,29 @@
                     {% for c in claims %}
                     <tr style="border-bottom: 1px solid #f4f7fe; transition: all 0.2s;" class="table-row-hover">
                         <td class="py-3 fw-bold" style="color: #4318ff;">{{ c.claim_id }}</td>
-                        
                         <td class="py-3 fw-medium text-secondary">{{ c.claim_date|date:"d/m/Y" }}</td>
                         
                         <td class="py-3">
-                            <div class="fw-bold" style="color: #2b3674; font-size: 1.05rem;">{{ c.cus.cus_name }}</div>
-                            <small class="fw-medium" style="color: #a3aed1;"><i class="bi bi-telephone-fill me-1"></i>{{ c.cus.tel }}</small>
+                            <div class="fw-bold" style="color: #2b3674; font-size: 1.05rem;">
+                                {% if c.sale_detail.sale.cus %}{{ c.sale_detail.sale.cus.cus_name }}{% else %}ລູກຄ້າທົ່ວໄປ{% endif %}
+                            </div>
                         </td>
                         
-                        <td class="py-3 fw-bold" style="color: #2b3674;">{{ c.pro.pro_name }}</td>
+                        <td class="py-3 fw-bold" style="color: #2b3674;">{{ c.sale_detail.pro.pro_name }}</td>
                         
                         <td class="py-3">
-                            <span class="d-inline-block text-truncate text-secondary fw-medium" style="max-width: 180px;" title="{{ c.detail }}">
-                                {{ c.detail }}
+                            <span class="d-inline-block text-truncate text-secondary fw-medium" style="max-width: 180px;" title="{{ c.symptom }}">
+                                {{ c.symptom }}
                             </span>
                         </td>
                         
                         <td class="py-3 text-center">
-                            {% if c.status == 'Pending' or c.status == 'ລໍຖ້າກວດສອບ' %}
+                            {% if c.status == 'ລໍຖ້າກວດສອບ' %}
                                 <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(255, 181, 71, 0.1); color: #ffb547;">ລໍຖ້າກວດສອບ</span>
-                            {% elif c.status == 'Processing' or c.status == 'ກຳລັງສ້ອມແປງ' %}
+                            {% elif c.status == 'ກຳລັງສ້ອມແປງ' %}
                                 <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(67, 24, 255, 0.1); color: #4318ff;">ກຳລັງສ້ອມແປງ</span>
-                            {% elif c.status == 'Completed' or c.status == 'ສ້ອມແປງສຳເລັດ' %}
+                            {% elif c.status == 'ສ້ອມແປງສຳເລັດ' %}
                                 <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(5, 205, 153, 0.1); color: #05cd99;">ສ້ອມແປງສຳເລັດ</span>
-                            {% elif c.status == 'Returned' or c.status == 'ສົ່ງຄືນລູກຄ້າແລ້ວ' %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(163, 174, 209, 0.15); color: #64748b;">ສົ່ງຄືນແລ້ວ</span>
                             {% else %}
                                 <span class="badge rounded-pill px-3 py-2 fw-bold bg-light text-dark">{{ c.status }}</span>
                             {% endif %}

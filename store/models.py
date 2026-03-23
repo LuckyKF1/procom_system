@@ -60,6 +60,10 @@ class Product(models.Model):
     cat = models.ForeignKey(Category, on_delete=models.CASCADE, db_column='cat_id')
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, db_column='brand_id')
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, db_column='unit_id')
+    pro_img = models.ImageField(upload_to='products/', null=True, blank=True)
+
+    def __str__(self):
+        return self.pro_name
 
     class Meta: db_table = 'tb_products'
 

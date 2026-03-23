@@ -12,45 +12,45 @@
             </a>
         </div>
 
-        <form method="POST">
+<form method="POST">
             {% csrf_token %}
             
-            <div class="row mb-4">
-                <div class="col-md-6 mb-3 mb-md-0">
-                    <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ລູກຄ້າ (Customer) <span class="text-danger">*</span></label>
-                    <select name="cus_id" class="form-select" required>
-                        <option value="">-- ເລືອກລູກຄ້າ --</option>
-                        {% for c in customers %}
-                            <option value="{{ c.cus_id }}">{{ c.cus_name }} (ໂທ: {{ c.tel }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ສິນຄ້າທີ່ເຄມ (Product) <span class="text-danger">*</span></label>
-                    <select name="pro_id" class="form-select" required>
-                        <option value="">-- ເລືອກສິນຄ້າ --</option>
-                        {% for p in products %}
-                            <option value="{{ p.pro_id }}">{{ p.pro_name }}</option>
-                        {% endfor %}
-                    </select>
+            <div class="mb-4">
+                <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ຄົ້ນຫາ ແລະ ເລືອກລາຍການສິນຄ້າຈາກບິນຂາຍ <span class="text-danger">*</span></label>
+                <select name="sale_detail_id" class="form-select py-2" required style="background-color: #f4f7fe; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <option value="">-- ເລືອກລາຍການທີ່ລູກຄ້າເອົາມາເຄມ --</option>
+                    {% for sd in sale_details %}
+                        <option value="{{ sd.pk }}">
+                            {{ sd.pro.pro_name }} 
+                            | ບິນ: {{ sd.sale.sale_id }} 
+                            | ລູກຄ້າ: {% if sd.sale.cus %}{{ sd.sale.cus.cus_name }}{% else %}ລູກຄ້າທົ່ວໄປ{% endif %}
+                            | ວັນທີ: {{ sd.sale.sale_date|date:"d/m/Y" }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="alert alert-info mt-3 p-2 border-0 shadow-sm" style="border-radius: 10px; background-color: rgba(67, 24, 255, 0.05);">
+                    <small style="color: #4318ff;">
+                        <i class="bi bi-info-circle-fill me-1"></i> 
+                        <b>ຄຳແນະນຳ:</b> ລະບົບຈະສະແດງສະເພາະສິນຄ້າທີ່ເຄີຍມີປະຫວັດການຂາຍເທົ່ານັ້ນ ເພື່ອປ້ອງກັນການເຄມສິນຄ້າທີ່ບໍ່ໄດ້ຊື້ຈາກຮ້ານ.
+                    </small>
                 </div>
             </div>
 
             <div class="mb-4">
-                <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ອາການເບື້ອງຕົ້ນ (Issue Details) <span class="text-danger">*</span></label>
-                <textarea name="detail" class="form-control" rows="4" placeholder="ລະບຸອາການທີ່ເພພັງ ເຊັ່ນ: ເປີດບໍ່ຕິດ, ໜ້າຈໍແຕກ, ສາຍສາກບໍ່ເຂົ້າ..." required></textarea>
+                <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ອາການເພພັງ (Symptom) <span class="text-danger">*</span></label>
+                <textarea name="symptom" class="form-control" rows="4" placeholder="ລະບຸອາການ ເຊັ່ນ: ເປີດບໍ່ຕິດ, ປຸ່ມກົດບໍ່ໄດ້..." required style="border-radius: 12px;"></textarea>
             </div>
 
             <div class="mb-5">
-                <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ສະຖານະເບື້ອງຕົ້ນ (Status)</label>
-                <select name="status" class="form-select" required>
-                    <option value="ລໍຖ້າກວດສອບ" selected>ລໍຖ້າກວດສອບ (Pending)</option>
-                    <option value="ກຳລັງສ້ອມແປງ">ກຳລັງສ້ອມແປງ (Processing)</option>
+                <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ສະຖານະເບື້ອງຕົ້ນ</label>
+                <select name="status" class="form-select py-2" style="background-color: #f4f7fe; border-radius: 12px;">
+                    <option value="Processing" selected>ກຳລັງກວດສອບ (Processing)</option>
+                    <option value="Waiting">ລໍຖ້າອາໄຫຼ່ (Waiting)</option>
                 </select>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 d-flex justify-content-center align-items-center btn-hover-shadow" style="border-radius: 15px;">
-                <i class="bi bi-save me-2"></i> ບັນທຶກການຮັບເຄມ
+            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 shadow-sm" style="border-radius: 15px;">
+                <i class="bi bi-save me-2"></i> ຢືນຢັນການຮັບເຄມ
             </button>
         </form>
         

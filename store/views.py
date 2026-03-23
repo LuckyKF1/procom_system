@@ -1,3 +1,4 @@
+import random
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -31,12 +32,14 @@ def login_view(request):
     return render(request, 'store/login.html', {'shop': shop})
 
 # ຟັງຊັນອອກຈາກລະບົບ (Logout)
+@login_required(login_url='login')
 def logout_view(request):
     logout(request)
     messages.success(request, 'ທ່ານໄດ້ອອກຈາກລະບົບແລ້ວ.')
     return redirect('login')
 
 # Dashboard
+@login_required(login_url='login')
 def dashboard(request):
     total_products = Product.objects.count()
     total_sales_dict = Sale.objects.aggregate(Sum('total_amount'))
@@ -61,6 +64,7 @@ def dashboard(request):
     return render(request, 'store/dashboard.html', context)
 
 # Product List
+@login_required(login_url='login')
 def product_list(request):
     search_query = request.GET.get('search', '')
     if search_query:
@@ -76,6 +80,7 @@ def product_list(request):
                 'search_query': search_query
         })
 
+@login_required(login_url='login')
 def add_product(request):
     if request.method == "POST":
         # ຮັບຄ່າຈາກຟອມ
@@ -84,9 +89,12 @@ def add_product(request):
         price_buy = float(request.POST.get('price_buy', 0))
         price_sale = float(request.POST.get('price_sale', 0))
         qty = int(request.POST.get('qty', 0))
-        cat_id = request.POST.get('cat_id')
-        brand_id = request.POST.get('brand_id')
-        unit_id = request.POST.get('unit_id')
+        
+        cat_id = request.POST.get('cat')
+        brand_id = request.POST.get('brand')
+        unit_id = request.POST.get('unit')
+
+        pro_img = request.FILES.get('pro_img')
 
         # ກວດສອບວ່າລະຫັດສິນຄ້າຊ້ຳກັນຫຼືບໍ່
         if Product.objects.filter(pro_id=pro_id).exists():
@@ -107,15 +115,23 @@ def add_product(request):
             qty=qty,
             cat=cat,
             brand=brand,
-            unit=unit
+            unit=unit,
+            pro_img=pro_img
         )
         messages.success(request, f'ເພີ່ມສິນຄ້າ {pro_name} ສຳເລັດແລ້ວ!')
-        return redirect('product_list') # ກັບໄປໜ້າລາຍການສິນຄ້າ
+        return redirect('product_list')
 
     # ສຳລັບສະແດງໜ້າຟອມ ດຶງຂໍ້ມູນ Dropdown ມາສະແດງ
     categories = Category.objects.all()
     brands = Brand.objects.all()
     units = Unit.objects.all()
+    
+    # ຢ່າລືມ return ຕົວແປອອກໄປໃຫ້ HTML ເດີ້
+    return render(request, 'store/add_product.html', {
+        'categories': categories,
+        'brands': brands,
+        'units': units
+    })
 
     return render(request, 'store/add_product.html', {
         'categories': categories,
@@ -124,6 +140,7 @@ def add_product(request):
     })
 
 # Claim List
+@login_required(login_url='login')
 def claim_list(request):
     # ດຶງຂໍ້ມູນການເຄມທັງໝົດ ລຽງຈາກໃໝ່ໄປເກົ່າ
     claims = Claim.objects.all().order_by('-claim_date')
@@ -140,42 +157,58 @@ def claim_list(request):
     return render(request, 'store/claim_list.html', context)
 
 # Add Claim (ອັບເດດໃໝ່ ໃຫ້ເຊື່ອມກັບ SaleDetail)
+@login_required(login_url='login')
 def add_claim(request):
-    if request.method == 'POST':
-        cus_id = request.POST.get('cus_id')
-        pro_id = request.POST.get('pro_id')
-        detail = request.POST.get('detail')
+    if request.method == "POST":
+        # ຮັບຄ່າຈາກຟອມ
+        sale_detail_id = request.POST.get('sale_detail_id')
+        symptom = request.POST.get('symptom')
         status = request.POST.get('status')
-        
-        # ສ້າງລະຫັດເຄມອັດຕະໂນມັດ (ຂຶ້ນຕົ້ນດ້ວຍ C ຕາມດ້ວຍເລກ 8 ໂຕ)
-        claim_id = f"C{str(int(timezone.now().timestamp()))[-8:]}"
-        
-        # ດຶງ Object ຂອງລູກຄ້າ ແລະ ສິນຄ້າ
-        customer = get_object_or_404(Customer, cus_id=cus_id)
-        product = get_object_or_404(Product, pro_id=pro_id)
-        
-        # ບັນທຶກລົງຖານຂໍ້ມູນ
-        Claim.objects.create(
-            claim_id=claim_id,
-            cus=customer,
-            pro=product,
-            detail=detail,
-            status=status
-        )
-        
-        messages.success(request, f'ບັນທຶກການຮັບເຄມລະຫັດ {claim_id} ສຳເລັດແລ້ວ!')
-        return redirect('claim_list')
 
-    # ຖ້າເປັນ GET (ເປີດໜ້າເວັບທຳມະດາ) ໃຫ້ດຶງຂໍ້ມູນລູກຄ້າ ແລະ ສິນຄ້າມາສະແດງໃນ Dropdown
-    customers = Customer.objects.all()
-    products = Product.objects.all()
+        # ສ້າງລະຫັດເຄມແບບສຸ່ມ ເຊັ່ນ CLM1024
+        claim_id = f"CLM{random.randint(1000, 9999)}"
+
+        try:
+            # ດຶງຂໍ້ມູນການຂາຍທີ່ລູກຄ້າເອົາມາເຄມ
+            from .models import SaleDetail, Employee, Claim # Import model ຖ້າຍັງບໍ່ໄດ້ import
+            sale_detail = get_object_or_404(SaleDetail, pk=sale_detail_id)
+            
+            # ສົມມຸດວ່າດຶງພະນັກງານຄົນທຳອິດມາເປັນຜູ້ຮັບເຄມ (ສຳລັບ Mock Data)
+            emp = Employee.objects.first() 
+            
+            if not emp:
+                messages.error(request, 'ກະລຸນາເພີ່ມຂໍ້ມູນພະນັກງານ (Employee) ໃນ Admin ກ່ອນ!')
+                return redirect('add_claim')
+
+            # ບັນທຶກລົງຖານຂໍ້ມູນຂອງທ່ານ
+            Claim.objects.create(
+                claim_id=claim_id,
+                sale_detail=sale_detail,
+                emp=emp,
+                symptom=symptom,
+                status=status
+            )
+            messages.success(request, 'ບັນທຶກລາຍການເຄມສຳເລັດແລ້ວ!')
+            return redirect('claim_list')
+            
+        except Exception as e:
+            messages.error(request, f'ເກີດຂໍ້ຜິດພາດ: {str(e)}')
+            return redirect('add_claim')
+
+    # ສຳລັບສະແດງໜ້າຟອມ ໃຫ້ດຶງເອົາສະເພາະລາຍການທີ່ເຄີຍ "ຂາຍແລ້ວ" ມາໃຫ້ເລືອກເຄມ
+    from .models import SaleDetail
+    sale_details = SaleDetail.objects.all().order_by('-sale__sale_date')
     
-    return render(request, 'store/add_claim.html', {
-        'customers': customers,
-        'products': products
-    })
+    return render(request, 'store/add_claim.html', {'sale_details': sale_details})
+
+@login_required(login_url='login')
+def claim_list(request):
+    from .models import Claim
+    claims = Claim.objects.all().order_by('-claim_date')
+    return render(request, 'store/claim_list.html', {'claims': claims})
 
 # POS Page (ຈັດການທັງສະແດງສິນຄ້າ ແລະ ຄິດໄລ່ເງິນລວມ)
+@login_required(login_url='login')
 def pos(request):
     search_query = request.GET.get('search', '')
     if search_query:
@@ -199,6 +232,7 @@ def pos(request):
     return render(request, 'store/pos.html', context)
 
 # Add to cart
+@login_required(login_url='login')
 def add_to_cart(request, pro_id):
     product = get_object_or_404(Product, pro_id=pro_id)
     cart = request.session.get('cart', {})
@@ -223,6 +257,7 @@ def add_to_cart(request, pro_id):
     return redirect('pos')
 
 # Remove from cart
+@login_required(login_url='login')
 def remove_from_cart(request, pro_id):
     cart = request.session.get('cart', {})
     if str(pro_id) in cart:
@@ -231,12 +266,14 @@ def remove_from_cart(request, pro_id):
     return redirect('pos')
 
 # Clear cart
+@login_required(login_url='login')
 def clear_cart(request):
     if 'cart' in request.session:
         del request.session['cart']
     return redirect('pos')
 
 # Checkout and save to Database
+@login_required(login_url='login')
 def checkout(request):
     if request.method == 'POST':
         cart = request.session.get('cart', {})
@@ -304,6 +341,7 @@ def checkout(request):
     return redirect('pos')
 
 # Receipt View
+@login_required(login_url='login')
 def receipt(request, sale_id):
     sale = get_object_or_404(Sale, sale_id=sale_id)
     details = SaleDetail.objects.filter(sale=sale)
@@ -317,7 +355,7 @@ def receipt(request, sale_id):
         'payment_info': payment_info
     })
 
-    
+@login_required(login_url='login')
 def sales_report(request):
     #ດຶງລາຍການຂາຍທັງໝົດ ຮຽງຈາກໃໝ່ໄປເກົ້າ
     sales = Sale.objects.all().order_by('-sale_date')
@@ -333,6 +371,7 @@ def sales_report(request):
     }
     return render(request, 'store/sales_report.html', context)
 
+@login_required(login_url='login')
 def shop_settings(request):
     # ດຶງຂໍ້ມູນຮ້ານມາໃຊ້ ແລະ ຖ້າບໍ່ມີ ສ້າງ record ເອງ
     shop = ShopInfo.objects.first()
@@ -355,6 +394,7 @@ def shop_settings(request):
         
     return render(request, 'store/shop_settings.html', {'shop': shop})
 
+@login_required(login_url='login')
 def import_stock(request):
     #ດຶງຂໍ້ມູນຜູ້ສະໜອງ ແລະ ສິນຄ້າ ເພື່ອໃຊ້ໃນ import stock form
     suppliers = Supplier.objects.all()
@@ -406,7 +446,8 @@ def import_stock(request):
         'suppliers': suppliers,
         'products': products
     })
-    
+
+@login_required(login_url='login')
 def update_claim_status(request, claim_id):
     # ดຶງຂໍ້ມູນເຄມທີ່ຕ້ອງການອັບເດດ
     claim = get_object_or_404(Claim, claim_id=claim_id)
@@ -424,6 +465,7 @@ def update_claim_status(request, claim_id):
     return redirect('claim_list')
 
 # ຟັງຊັນສຳລັບແກ້ໄຂສິນຄ້າ
+@login_required(login_url='login')
 def edit_product(request, pro_id):
     product = get_object_or_404(Product, pro_id=pro_id)
     
@@ -458,6 +500,7 @@ def edit_product(request, pro_id):
     })
 
 # ຟັງຊັນສຳລັບລຶບສິນຄ້າ
+@login_required(login_url='login')
 def delete_product(request, pro_id):
     product = get_object_or_404(Product, pro_id=pro_id)
     pro_name = product.pro_name # ເກັບຊື່ໄວ້ສະແດງແຈ້ງເຕືອນກ່ອນລຶບ
