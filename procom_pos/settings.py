@@ -26,7 +26,11 @@ SECRET_KEY = 'django-insecure-=xapv#5k-(-a1c)922qh9xx6p+m*s57r%#wvj)bdm649$b4ljc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://gilda-unpalisadoed-iteratively.ngrok-free.dev',
+]
 
 
 # Application definition
@@ -78,13 +82,14 @@ WSGI_APPLICATION = 'procom_pos.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'procom_db',       # ตรงกับใน docker-compose
+        'NAME': 'procom_db',
         'USER': 'root',
-        'PASSWORD': '1111111a',# ตรงกับ MYSQL_ROOT_PASSWORD ใน docker-compose
-        'HOST': 'db',              # <--- สำคัญมาก! ต้องใช้คำว่า 'db'
+        'PASSWORD': '1111111a',
+        'HOST': 'db',
         'PORT': '3306',
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
