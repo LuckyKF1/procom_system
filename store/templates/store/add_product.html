@@ -1,82 +1,84 @@
 {% extends 'store/base.html' %}
 {% block content %}
-<div class="container mt-4 d-flex justify-content-center">
-    <div class="card shadow p-4" style="width: 700px;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="fw-bold text-success mb-0"><i class="bi bi-box-seam"></i> ເພີ່ມສິນຄ້າໃໝ່ (Add Product)</h3>
-            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary btn-sm">ກັບຄືນໜ້າລາຍການ</a>
+<div class="container mt-2 d-flex justify-content-center">
+    <div class="card p-3 p-md-4 w-100 shadow-sm" style="max-width: 800px; border-radius: 15px;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2" style="border-bottom: 2px solid #f4f7fe;">
+            <h5 class="fw-bold mb-0" style="color: #2b3674;">
+                <i class="bi bi-box-seam-fill me-2" style="color: #4318ff;"></i> ເພີ່ມສິນຄ້າໃໝ່ (Add Product)
+            </h5>
+            <a href="{% url 'product_list' %}" class="btn btn-sm px-3 py-1" style="background-color: #f4f7fe; color: #2b3674; font-weight: 600; border-radius: 8px; transition: all 0.2s; font-size: 0.85rem;">
+                <i class="bi bi-arrow-left me-1"></i> ກັບຄືນ
+            </a>
         </div>
-        <hr>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label class="fw-bold">ລະຫັດສິນຄ້າ (ID):</label>
-                    <input type="text" name="pro_id" class="form-control" required placeholder="ເຊັ່ນ: P001">
-                </div>
-                <div class="col-md-8">
-                    <label class="fw-bold">ຊື່ສິນຄ້າ (Product Name):</label>
-                    <input type="text" name="pro_name" class="form-control" required placeholder="ເຊັ່ນ: Mouse Logitech G102">
-                </div>
-            </div>
 
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label class="fw-bold">ລາຄາຕົ້ນທຶນ (ຊື້):</label>
-                    <input type="number" step="0.01" name="price_buy" class="form-control" required min="0">
+            <h6 class="fw-bold mb-2" style="color: #4318ff; font-size: 0.9rem;"><i class="bi bi-info-circle-fill me-2"></i> ຂໍ້ມູນພື້ນຖານ</h6>
+            <div class="row g-2 mb-3">
+                <div class="col-md-6 mb-2">
+                    <label class="fw-bold mb-1" style="color: #2b3674; font-size: 0.85rem;">ລະຫັດສິນຄ້າ (Barcode) <span class="text-danger">*</span></label>
+                    <input type="text" name="pro_id" class="form-control form-control-sm" placeholder="ຕົວຢ່າງ: P0001" required>
                 </div>
-                <div class="col-md-4">
-                    <label class="fw-bold">ລາຄາຂາຍ (ຂາຍ):</label>
-                    <input type="number" step="0.01" name="price_sale" class="form-control" required min="0">
+                <div class="col-md-6 mb-2">
+                    <label class="fw-bold mb-1" style="color: #2b3674; font-size: 0.85rem;">ຊື່ສິນຄ້າ (Product Name) <span class="text-danger">*</span></label>
+                    <input type="text" name="pro_name" class="form-control form-control-sm" placeholder="ປ້ອນຊື່ສິນຄ້າ..." required>
                 </div>
-                <div class="col-md-4">
-                    <label class="fw-bold">ຈຳນວນເລີ່ມຕົ້ນ:</label>
-                    <input type="number" name="qty" class="form-control" value="0" min="0" required>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <label class="fw-bold">ໝວດໝູ່ (Category):</label>
-                    <select name="cat_id" class="form-select" required>
+                
+                <div class="col-md-4 mb-2">
+                    <label class="fw-bold mb-1" style="color: #2b3674; font-size: 0.85rem;">ໝວດໝູ່ (Category)</label>
+                    <select name="cat" class="form-select form-select-sm" required>
                         <option value="">-- ເລືອກໝວດໝູ່ --</option>
-                        {% for c in categories %}
-                            <option value="{{ c.cat_id }}">{{ c.cat_name }}</option>
-                        {% endfor %}
+                        {% for c in categories %}<option value="{{ c.cat_id }}">{{ c.cat_name }}</option>{% endfor %}
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="fw-bold">ຍີ່ຫໍ້ (Brand):</label>
-                    <select name="brand_id" class="form-select" required>
+                <div class="col-md-4 mb-2">
+                    <label class="fw-bold mb-1" style="color: #2b3674; font-size: 0.85rem;">ຍີ່ຫໍ້ (Brand)</label>
+                    <select name="brand" class="form-select form-select-sm" required>
                         <option value="">-- ເລືອກຍີ່ຫໍ້ --</option>
-                        {% for b in brands %}
-                            <option value="{{ b.brand_id }}">{{ b.brand_name }}</option>
-                        {% endfor %}
+                        {% for b in brands %}<option value="{{ b.brand_id }}">{{ b.brand_name }}</option>{% endfor %}
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="fw-bold">ຫົວໜ່ວຍ (Unit):</label>
-                    <select name="unit_id" class="form-select" required>
+                <div class="col-md-4 mb-2">
+                    <label class="fw-bold mb-1" style="color: #2b3674; font-size: 0.85rem;">ຫົວໜ່ວຍ (Unit)</label>
+                    <select name="unit" class="form-select form-select-sm" required>
                         <option value="">-- ເລືອກຫົວໜ່ວຍ --</option>
-                        {% for u in units %}
-                            <option value="{{ u.unit_id }}">{{ u.unit_name }}</option>
-                        {% endfor %}
+                        {% for u in units %}<option value="{{ u.unit_id }}">{{ u.unit_name }}</option>{% endfor %}
                     </select>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-success w-100 fs-5 rounded-pill shadow-sm">
-                <i class="bi bi-save"></i> ບັນທຶກຂໍ້ມູນສິນຄ້າ
+            <h6 class="fw-bold mb-2" style="color: #4318ff; font-size: 0.9rem; border-top: 2px solid #f4f7fe; padding-top: 10px;"><i class="bi bi-tag-fill me-2"></i> ລາຄາ ແລະ ສະຕັອກ</h6>
+            <div class="row g-2 mb-3">
+                <div class="col-md-4 mb-2">
+                    <label class="fw-bold mb-1" style="color: #2b3674; font-size: 0.85rem;">ລາຄາຕົ້ນທຶນ (Cost Price) <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                        <input type="number" name="price_buy" class="form-control border-0 bg-transparent shadow-none" placeholder="0" required>
+                        <span class="input-group-text bg-light border-0 text-muted" style="font-size: 0.8rem;">ກີບ</span>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label class="fw-bold mb-1" style="color: #2b3674; font-size: 0.85rem;">ລາຄາຂາຍ (Sale Price) <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                        <input type="number" name="price_sale" class="form-control border-0 bg-transparent shadow-none" placeholder="0" required>
+                        <span class="input-group-text bg-light border-0 fw-bold" style="color: #4318ff; font-size: 0.8rem;">ກີບ</span>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label class="fw-bold mb-1" style="color: #2b3674; font-size: 0.85rem;">ຈຳນວນເບື້ອງຕົ້ນ (Qty) <span class="text-danger">*</span></label>
+                    <input type="number" name="qty" class="form-control form-control-sm" placeholder="0" value="0" required>
+                </div>
+            </div>
+
+            <h6 class="fw-bold mb-2" style="color: #4318ff; font-size: 0.9rem; border-top: 2px solid #f4f7fe; padding-top: 10px;"><i class="bi bi-image-fill me-2"></i> ຮູບພາບສິນຄ້າ (Image)</h6>
+            <div class="mb-4">
+                <input type="file" name="pro_img" class="form-control form-control-sm bg-light" accept="image/*" style="border: 2px dashed #cbd5e1; border-radius: 10px;">
+                <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;"><i class="bi bi-info-circle"></i> ຮອງຮັບ .jpg, .png ຂະໜາດບໍ່ເກີນ 2MB</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold d-flex justify-content-center align-items-center" style="border-radius: 12px; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(67, 24, 255, 0.15); font-size: 1rem;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='translateY(0)';">
+                <i class="bi bi-save me-2"></i> ບັນທຶກຂໍ້ມູນສິນຄ້າ
             </button>
         </form>
     </div>

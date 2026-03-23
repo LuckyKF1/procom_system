@@ -1,54 +1,39 @@
 {% extends 'store/base.html' %}
 {% block content %}
-<div class="container mt-4 d-flex justify-content-center">
-    <div class="card shadow p-4" style="width: 600px;">
-        <h3 class="fw-bold mb-3 text-primary"><i class="bi bi-box-arrow-in-down"></i> ຮັບສິນຄ້າເຂົ້າຄັງ (Import Stock)</h3>
-        <hr>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+<div class="container mt-2 d-flex justify-content-center">
+    <div class="card p-4 p-md-5 w-100 shadow-sm" style="max-width: 650px; border-radius: 20px;">
+        
+        <div class="text-center mb-4 pb-3" style="border-bottom: 2px solid #f4f7fe;">
+            <div class="rounded-circle d-inline-flex justify-content-center align-items-center mb-3" style="width: 70px; height: 70px; background: rgba(5, 205, 153, 0.1); color: #05cd99;">
+                <i class="bi bi-box-arrow-in-down" style="font-size: 2.5rem;"></i>
+            </div>
+            <h4 class="fw-bold mb-1" style="color: #2b3674;">ຮັບເຂົ້າສິນຄ້າ (Import Stock)</h4>
+            <p class="text-muted mb-0">ເພີ່ມຈຳນວນສິນຄ້າເຂົ້າໃນຄັງສິນຄ້າ</p>
+        </div>
 
         <form method="POST">
             {% csrf_token %}
             
-            <div class="mb-3">
-                <label class="fw-bold">ຜູ້ສະໜອງ (Supplier):</label>
-                <select name="sup_id" class="form-select" required>
-                    <option value="">-- ເລືອກຜູ້ສະໜອງ --</option>
-                    {% for sup in suppliers %}
-                        <option value="{{ sup.sup_id }}">{{ sup.company_name }}</option>
+            <div class="mb-4">
+                <label class="fw-bold mb-2" style="color: #2b3674;">ເລືອກສິນຄ້າ (Product) <span class="text-danger">*</span></label>
+                <select name="pro_id" class="form-select form-select-lg" required>
+                    <option value="">-- ຄົ້ນຫາ / ເລືອກສິນຄ້າ --</option>
+                    {% for p in products %}
+                        <option value="{{ p.pro_id }}">{{ p.pro_id }} - {{ p.pro_name }} (ໃນຄັງ: {{ p.qty }})</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <div class="mb-3">
-                <label class="fw-bold">ສິນຄ້າ (Product):</label>
-                <select name="pro_id" class="form-select" required>
-                    <option value="">-- ເລືອກສິນຄ້າ --</option>
-                    {% for pro in products %}
-                        <option value="{{ pro.pro_id }}">{{ pro.pro_name }} (ມີຢູ່: {{ pro.qty }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="fw-bold">ຈຳນວນນຳເຂົ້າ (Qty):</label>
-                    <input type="number" name="qty" class="form-control" min="1" value="1" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="fw-bold">ລາຄາຕົ້ນທຶນ/ຊິ້ນ (Price):</label>
-                    <input type="number" step="0.01" name="price" class="form-control" min="0" required placeholder="ຕົວຢ່າງ: 150000">
+            <div class="mb-5">
+                <label class="fw-bold mb-2" style="color: #2b3674;">ຈຳນວນທີ່ຮັບເຂົ້າ (Quantity to Add) <span class="text-danger">*</span></label>
+                <div class="input-group input-group-lg" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-plus-circle text-success"></i></span>
+                    <input type="number" name="add_qty" class="form-control border-0 bg-transparent shadow-none fw-bold" placeholder="0" min="1" required style="color: #05cd99;">
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 fs-5 mt-2">
-                <i class="bi bi-save"></i> ບັນທຶກການນຳເຂົ້າ
+            <button type="submit" class="btn btn-success w-100 py-3 fw-bold fs-5 d-flex justify-content-center align-items-center" style="border-radius: 15px; background-color: #05cd99; border-color: #05cd99; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(5, 205, 153, 0.3);" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+                <i class="bi bi-check2-circle me-2"></i> ຢືນຢັນການຮັບເຂົ້າ
             </button>
         </form>
     </div>

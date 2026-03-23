@@ -1,66 +1,93 @@
 {% extends 'store/base.html' %}
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid px-0">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold"><i class="bi bi-tools me-2"></i> ລາຍການເຄມສິນຄ້າ</h2>
-        <a href="{% url 'add_claim' %}" class="btn btn-primary rounded-pill shadow-sm">
-            <i class="bi bi-plus-circle me-2"></i> ເພີ່ມລາຍການເຄມ
+        <h3 class="fw-bold mb-0" style="color: #2b3674;">
+            <i class="bi bi-tools me-2" style="color: #4318ff;"></i> ລາຍການເຄມສິນຄ້າ (Claims)
+        </h3>
+        <a href="{% url 'add_claim' %}" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm d-flex align-items-center">
+            <i class="bi bi-plus-lg me-2"></i> <span>ເພີ່ມລາຍການເຄມໃໝ່</span>
         </a>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+    <div class="card p-3 mb-4 d-flex flex-row align-items-center justify-content-between">
+        <form method="GET" class="w-100 d-flex gap-3 align-items-center">
+            <div class="input-group" style="background-color: #f4f7fe; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; max-width: 500px;">
+                <span class="input-group-text bg-transparent border-0 text-muted px-3">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" name="search" class="form-control bg-transparent border-0 shadow-none ps-0" placeholder="ຄົ້ນຫາດ້ວຍຊື່ສິນຄ້າ ຫຼື ລະຫັດເຄມ..." value="{{ search_query }}">
+            </div>
+            <button type="submit" class="btn btn-primary" style="border-radius: 12px; font-weight: 600; padding: 10px 25px;">
+                ຄົ້ນຫາ
+            </button>
+        </form>
+    </div>
+
+    <div class="card p-4">
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle mb-0">
+                <thead style="border-bottom: 2px solid #f4f7fe;">
                     <tr>
-                        <th>ວັນທີເຄມ</th>
-                        <th>ລະຫັດເຄມ</th>
-                        <th>ຊື່ສິນຄ້າ</th>
-                        <th>ລູກຄ້າ</th>
-                        <th>ສະຖານະ</th>
-                        <th>ຈັດການ</th>
+                        <th class="text-muted fw-bold pb-3">ລະຫັດເຄມ</th>
+                        <th class="text-muted fw-bold pb-3">ວັນທີຮັບເຄມ</th>
+                        <th class="text-muted fw-bold pb-3">ລູກຄ້າ</th>
+                        <th class="text-muted fw-bold pb-3">ສິນຄ້າທີ່ເຄມ</th>
+                        <th class="text-muted fw-bold pb-3">ອາການເບື້ອງຕົ້ນ</th>
+                        <th class="text-muted fw-bold pb-3 text-center">ສະຖານະ</th>
+                        <th class="text-muted fw-bold pb-3 text-center">ຈັດການ</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for c in claims %}
-                    <tr>
-                        <td>{{ c.claim_date|date:"d/m/Y H:i" }}</td>
-                        <td class="fw-bold text-primary">{{ c.claim_id }}</td>
+                    <tr style="border-bottom: 1px solid #f4f7fe; transition: all 0.2s;" class="table-row-hover">
+                        <td class="py-3 fw-bold" style="color: #4318ff;">{{ c.claim_id }}</td>
                         
-                        <td>{{ c.sale_detail.pro.pro_name }}</td>
+                        <td class="py-3 fw-medium text-secondary">{{ c.claim_date|date:"d/m/Y" }}</td>
                         
-                        <td>
-                            {% if c.sale_detail.sale.cus %}
-                                {{ c.sale_detail.sale.cus.cus_name }}
+                        <td class="py-3">
+                            <div class="fw-bold" style="color: #2b3674; font-size: 1.05rem;">{{ c.cus.cus_name }}</div>
+                            <small class="fw-medium" style="color: #a3aed1;"><i class="bi bi-telephone-fill me-1"></i>{{ c.cus.tel }}</small>
+                        </td>
+                        
+                        <td class="py-3 fw-bold" style="color: #2b3674;">{{ c.pro.pro_name }}</td>
+                        
+                        <td class="py-3">
+                            <span class="d-inline-block text-truncate text-secondary fw-medium" style="max-width: 180px;" title="{{ c.detail }}">
+                                {{ c.detail }}
+                            </span>
+                        </td>
+                        
+                        <td class="py-3 text-center">
+                            {% if c.status == 'Pending' or c.status == 'ລໍຖ້າກວດສອບ' %}
+                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(255, 181, 71, 0.1); color: #ffb547;">ລໍຖ້າກວດສອບ</span>
+                            {% elif c.status == 'Processing' or c.status == 'ກຳລັງສ້ອມແປງ' %}
+                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(67, 24, 255, 0.1); color: #4318ff;">ກຳລັງສ້ອມແປງ</span>
+                            {% elif c.status == 'Completed' or c.status == 'ສ້ອມແປງສຳເລັດ' %}
+                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(5, 205, 153, 0.1); color: #05cd99;">ສ້ອມແປງສຳເລັດ</span>
+                            {% elif c.status == 'Returned' or c.status == 'ສົ່ງຄືນລູກຄ້າແລ້ວ' %}
+                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(163, 174, 209, 0.15); color: #64748b;">ສົ່ງຄືນແລ້ວ</span>
                             {% else %}
-                                <span class="text-muted fst-italic">ລູກຄ້າທົ່ວໄປ</span>
+                                <span class="badge rounded-pill px-3 py-2 fw-bold bg-light text-dark">{{ c.status }}</span>
                             {% endif %}
                         </td>
                         
-                        <td>
-                        {% if c.status == 'Processing' %}
-                            <a href="{% url 'update_claim_status' c.claim_id %}" 
-                            class="btn btn-sm btn-outline-success rounded-pill shadow-sm"
-                            onclick="return confirm('ຕ້ອງການປ່ຽນສະຖານະເຄມນີ້ເປັນ ສຳເລັດແລ້ວ ຫຼື ບໍ່?');">
-                            <i class="bi bi-check-circle"></i> ສຳເລັດແລ້ວ</a>
-                        {% else %}
-                            <a href="{% url 'update_claim_status' c.claim_id %}" 
-                            class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm"
-                            onclick="return confirm('ຕ້ອງການປ່ຽນສະຖານະເຄມນີ້ກັບໄປເປັນ ກຳລັງດຳເນີນການ ຫຼື ບໍ່?');">
-                            <i class="bi bi-arrow-counterclockwise"></i> ຍົກເລີກ</a>
-                        {% endif %}
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill">
-                                <i class="bi bi-pencil-square"></i> ອັບເດດ
-                            </button>
+                        <td class="py-3 text-center">
+                            <div class="d-flex justify-content-center">
+                                <a href="#" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(67, 24, 255, 0.1); color: #4318ff; border-radius: 10px;" title="ອັບເດດສະຖານະ/ແກ້ໄຂ">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            ຍັງບໍ່ມີລາຍການເຄມສິນຄ້າ
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted fw-medium mt-3">
+                                <i class="bi bi-tools fs-1 d-block mb-3 opacity-50"></i>
+                                ຍັງບໍ່ມີລາຍການເຄມສິນຄ້າ
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -68,5 +95,13 @@
             </table>
         </div>
     </div>
+
 </div>
+
+<style>
+    /* ສີ Hover ແຖວຕາຕະລາງ */
+    .table-row-hover:hover {
+        background-color: rgba(67, 24, 255, 0.02) !important;
+    }
+</style>
 {% endblock %}

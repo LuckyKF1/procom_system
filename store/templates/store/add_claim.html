@@ -1,49 +1,67 @@
 {% extends 'store/base.html' %}
 {% block content %}
-<div class="container mt-4 d-flex justify-content-center">
-    <div class="card shadow p-4" style="width: 600px;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="fw-bold text-danger mb-0"><i class="bi bi-tools"></i> ຮັບເຄມສິນຄ້າ (Add Claim)</h3>
-            <a href="{% url 'claim_list' %}" class="btn btn-outline-secondary btn-sm">ກັບຄືນໜ້າລາຍການ</a>
+<div class="container mt-2 d-flex justify-content-center">
+    <div class="card p-4 p-md-5 w-100" style="max-width: 800px;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 2px solid #f4f7fe;">
+            <h4 class="fw-bold mb-0" style="color: #2b3674;">
+                <i class="bi bi-tools me-2" style="color: #4318ff;"></i> ເພີ່ມລາຍການເຄມ (Add Claim)
+            </h4>
+            <a href="{% url 'claim_list' %}" class="btn btn-sm d-flex align-items-center px-3 py-2" style="background-color: #f4f7fe; color: #2b3674; font-weight: 600; border-radius: 10px; transition: all 0.2s;">
+                <i class="bi bi-arrow-left me-2"></i> ກັບຄືນ
+            </a>
         </div>
-        <hr>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
 
         <form method="POST">
             {% csrf_token %}
             
-            <div class="mb-3">
-                <label class="fw-bold">ເລືອກລາຍການຂາຍທີ່ຕ້ອງການເຄມ (Select Sold Item):</label>
-                <select name="sale_detail_id" class="form-select" required>
-                    <option value="">-- ເລືອກບິນຂາຍ / ສິນຄ້າ --</option>
-                    {% for item in recent_sales %}
-                        <option value="{{ item.id }}">
-                            ບິນ: {{ item.sale.sale_id }} | 
-                            ສິນຄ້າ: {{ item.pro.pro_name }} | 
-                            ລູກຄ້າ: {% if item.sale.cus %}{{ item.sale.cus.cus_name }}{% else %}ທົ່ວໄປ{% endif %} |
-                            ວັນທີ: {{ item.sale.sale_date|date:"d/m/Y" }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <div class="form-text text-muted">ສະແດງລາຍການຂາຍ 50 ລາຍການລ່າສຸດ</div>
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ລູກຄ້າ (Customer) <span class="text-danger">*</span></label>
+                    <select name="cus_id" class="form-select" required>
+                        <option value="">-- ເລືອກລູກຄ້າ --</option>
+                        {% for c in customers %}
+                            <option value="{{ c.cus_id }}">{{ c.cus_name }} (ໂທ: {{ c.tel }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ສິນຄ້າທີ່ເຄມ (Product) <span class="text-danger">*</span></label>
+                    <select name="pro_id" class="form-select" required>
+                        <option value="">-- ເລືອກສິນຄ້າ --</option>
+                        {% for p in products %}
+                            <option value="{{ p.pro_id }}">{{ p.pro_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
             <div class="mb-4">
-                <label class="fw-bold">ອາການເພ່ເພ / ບັນຫາ (Symptom / Problem):</label>
-                <textarea name="symptom" class="form-control" rows="4" placeholder="ອະທິບາຍອາການທີ່ລູກຄ້າແຈ້ງມາກ່ຽວກັບສິນຄ້າ..." required></textarea>
+                <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ອາການເບື້ອງຕົ້ນ (Issue Details) <span class="text-danger">*</span></label>
+                <textarea name="detail" class="form-control" rows="4" placeholder="ລະບຸອາການທີ່ເພພັງ ເຊັ່ນ: ເປີດບໍ່ຕິດ, ໜ້າຈໍແຕກ, ສາຍສາກບໍ່ເຂົ້າ..." required></textarea>
             </div>
 
-            <button type="submit" class="btn btn-danger w-100 fs-5">
-                <i class="bi bi-save"></i> ບັນທຶກການເຄມສິນຄ້າ
+            <div class="mb-5">
+                <label class="fw-bold mb-2" style="color: #2b3674; font-size: 0.95rem;">ສະຖານະເບື້ອງຕົ້ນ (Status)</label>
+                <select name="status" class="form-select" required>
+                    <option value="ລໍຖ້າກວດສອບ" selected>ລໍຖ້າກວດສອບ (Pending)</option>
+                    <option value="ກຳລັງສ້ອມແປງ">ກຳລັງສ້ອມແປງ (Processing)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 d-flex justify-content-center align-items-center btn-hover-shadow" style="border-radius: 15px;">
+                <i class="bi bi-save me-2"></i> ບັນທຶກການຮັບເຄມ
             </button>
         </form>
+        
     </div>
 </div>
+
+<style>
+    .btn-hover-shadow { transition: all 0.3s ease; }
+    .btn-hover-shadow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(67, 24, 255, 0.3);
+    }
+</style>
 {% endblock %}

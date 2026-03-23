@@ -125,42 +125,55 @@ def add_product(request):
 
 # Claim List
 def claim_list(request):
+    # ດຶງຂໍ້ມູນການເຄມທັງໝົດ ລຽງຈາກໃໝ່ໄປເກົ່າ
     claims = Claim.objects.all().order_by('-claim_date')
-    return render(request, 'store/claim_list.html', {'claims': claims})
+    
+    # ຄົ້ນຫາ (Search) ຖ້າມີການພິມຄົ້ນຫາ
+    search_query = request.GET.get('search', '')
+    if search_query:
+        claims = claims.filter(pro__pro_name__icontains=search_query) | claims.filter(claim_id__icontains=search_query)
+
+    context = {
+        'claims': claims,
+        'search_query': search_query
+    }
+    return render(request, 'store/claim_list.html', context)
 
 # Add Claim (ອັບເດດໃໝ່ ໃຫ້ເຊື່ອມກັບ SaleDetail)
 def add_claim(request):
-    if request.method == "POST":
-        sale_detail_id = request.POST.get('sale_detail_id')
-        symptom = request.POST.get('symptom')
+    if request.method == 'POST':
+        cus_id = request.POST.get('cus_id')
+        pro_id = request.POST.get('pro_id')
+        detail = request.POST.get('detail')
+        status = request.POST.get('status')
         
-        if sale_detail_id and symptom:
-            sale_detail = get_object_or_404(SaleDetail, id=sale_detail_id)
-            
-            # ດຶງຂໍ້ມູນພະນັກງານທີ່ຮັບເຄມ
-            emp = Employee.objects.first()
-            if not emp:
-                emp = Employee.objects.create(emp_id="EMP001", emp_name="Admin")
-            
-            # ສ້າງລະຫັດເຄມ
-            claim_id = f"CLM{int(timezone.now().timestamp())}"
-            
-            Claim.objects.create(
-                claim_id=claim_id,
-                sale_detail=sale_detail,
-                emp=emp,
-                symptom=symptom,
-                status='Processing' # Processing = ກຳລັງດຳເນີນການ
-            )
-            messages.success(request, 'ຮັບເລື່ອງເຄມສິນຄ້າສຳເລັດແລ້ວ!')
-            return redirect('claim_list')
-        else:
-            messages.error(request, 'ກະລຸນາເລືອກລາຍການຂາຍ ແລະ ປ້ອນອາການ!')
+        # ສ້າງລະຫັດເຄມອັດຕະໂນມັດ (ຂຶ້ນຕົ້ນດ້ວຍ C ຕາມດ້ວຍເລກ 8 ໂຕ)
+        claim_id = f"C{str(int(timezone.now().timestamp()))[-8:]}"
+        
+        # ດຶງ Object ຂອງລູກຄ້າ ແລະ ສິນຄ້າ
+        customer = get_object_or_404(Customer, cus_id=cus_id)
+        product = get_object_or_404(Product, pro_id=pro_id)
+        
+        # ບັນທຶກລົງຖານຂໍ້ມູນ
+        Claim.objects.create(
+            claim_id=claim_id,
+            cus=customer,
+            pro=product,
+            detail=detail,
+            status=status
+        )
+        
+        messages.success(request, f'ບັນທຶກການຮັບເຄມລະຫັດ {claim_id} ສຳເລັດແລ້ວ!')
+        return redirect('claim_list')
 
-    # ດຶງປະຫວັດການຂາຍ 50 ລາຍການລ່າສຸດ ມາໃຫ້ເລືອກເຄມ
-    recent_sales = SaleDetail.objects.select_related('sale', 'pro', 'sale__cus').order_by('-sale__sale_date')[:50]
+    # ຖ້າເປັນ GET (ເປີດໜ້າເວັບທຳມະດາ) ໃຫ້ດຶງຂໍ້ມູນລູກຄ້າ ແລະ ສິນຄ້າມາສະແດງໃນ Dropdown
+    customers = Customer.objects.all()
+    products = Product.objects.all()
     
-    return render(request, 'store/add_claim.html', {'recent_sales': recent_sales})
+    return render(request, 'store/add_claim.html', {
+        'customers': customers,
+        'products': products
+    })
 
 # POS Page (ຈັດການທັງສະແດງສິນຄ້າ ແລະ ຄິດໄລ່ເງິນລວມ)
 def pos(request):
@@ -260,7 +273,7 @@ def checkout(request):
             total_amount=total_amount,
             emp=emp,
             cus=customer,
-            status='Paid'   
+            status='Paid'
         )
         
         # ສ້າງ sale detail records ແລະ ອັບເດດ stock ໃນ product table
@@ -306,17 +319,17 @@ def receipt(request, sale_id):
 
     
 def sales_report(request):
-    # ດຶງລາຍການຂາຍທັງໝົດ ແລະ ລຽງຈາກໃໝ່ຫາເກົ່າ
+    #ດຶງລາຍການຂາຍທັງໝົດ ຮຽງຈາກໃໝ່ໄປເກົ້າ
     sales = Sale.objects.all().order_by('-sale_date')
     
-    # ຄິດໄລ່ຍອດລວມ
-    total_sales_amount = Sale.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    total_orders = Sale.objects.count()
-
+    #ຄຳນວນລາຍຮັບທັງໝົດ ແລະ ຈຳນວນໃນແຕ່ລາຍການ
+    total_revenue = sales.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_bills = sales.count()
+    
     context = {
         'sales': sales,
-        'total_sales_amount': total_sales_amount,
-        'total_orders': total_orders,
+        'total_revenue': total_revenue,
+        'total_bills': total_bills,
     }
     return render(request, 'store/sales_report.html', context)
 
