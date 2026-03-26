@@ -155,6 +155,8 @@
                             <i class="bi bi-tools"></i> ເຄມສິນຄ້າ
                         </a>
                     </li>
+
+                    {% if user.is_superuser %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'sales_report' %}active{% endif %}" href="{% url 'sales_report' %}">
                             <i class="bi bi-bar-chart-fill"></i> ລາຍງານ
@@ -165,28 +167,41 @@
                             <i class="bi bi-gear-fill"></i> ຕັ້ງຄ່າຮ້ານ
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
 
-                <div class="d-flex align-items-center border-start ps-4 ms-2">
-                    <div class="dropdown">
-                        <a class="text-decoration-none dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #2b3674; font-weight: 700;">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center me-2 text-white shadow-sm" style="width: 38px; height: 38px; background-color: #4318ff;">
-                                <i class="bi bi-person-fill"></i>
-                            </div>
-                            <span class="text-uppercase">{{ request.user.username|default:"Admin" }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 py-2" style="border-radius: 15px; min-width: 200px;">
-                            <li class="px-3 py-2 small fw-bold" style="color: #a3aed1;">ການຈັດການລະບົບ</li>
-                            <li>
-                                <a class="dropdown-item py-2 fw-semibold text-secondary" href="/admin/" target="_blank">
-                                    <i class="bi bi-shield-lock-fill me-2" style="color: #4318ff;"></i> ຖານຂໍ້ມູນ (Admin)
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider opacity-10"></li>
+                <div class="dropdown">
+    <a class="text-decoration-none dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #2b3674; font-weight: 700;">
+        <div class="rounded-circle d-flex align-items-center justify-content-center me-2 text-white shadow-sm" style="width: 38px; height: 38px; background-color: #4318ff;">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="d-flex flex-column">
+            <span class="text-uppercase" style="line-height: 1;">{{ request.user.username }}</span>
+            <small style="font-size: 0.65rem; color: #a3aed1;">
+                {% if request.user.is_superuser %}
+                    <i class="bi bi-shield-check text-danger"></i> ADMIN
+                {% else %}
+                    <i class="bi bi-person-badge text-primary"></i> STAFF
+                {% endif %}
+            </small>
+        </div>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 py-2" style="border-radius: 15px; min-width: 200px;">
+        <li class="px-3 py-2 small fw-bold" style="color: #a3aed1;">ສະຖານະ:
+            {% if request.user.is_authenticated %}
+                <span class="text-success">Online</span>
+            {% else %}
+                <span class="text-secondary">Offline</span>
+            {% endif %}
+        </li>
+        <li>
+            <a class="dropdown-item py-2 fw-semibold text-secondary" href="/admin/" target="_blank">
+                <i class="bi bi-shield-lock-fill me-2" style="color: #4318ff;"></i> ຖານຂໍ້ມູນ (Admin)</a>
+                    </li>
+                        <li><hr class="dropdown-divider opacity-10"></li>
                             <li>
                                 <a class="dropdown-item py-2 fw-semibold text-danger" href="{% url 'logout' %}">
-                                    <i class="bi bi-box-arrow-right me-2"></i> ອອກຈາກລະບົບ
-                                </a>
+                                <i class="bi bi-box-arrow-right me-2"></i> ອອກຈາກລະບົບ</a>
                             </li>
                         </ul>
                     </div>
