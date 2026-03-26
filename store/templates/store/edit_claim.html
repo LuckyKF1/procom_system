@@ -1,0 +1,97 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container-fluid px-0">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0" style="color: #2b3674;">
+            <i class="bi bi-pencil-square me-2" style="color: #4318ff;"></i> ຈັດການ/ແກ້ໄຂການເຄມ (Edit Claim)
+        </h3>
+        <a href="{% url 'claim_list' %}" class="btn btn-light rounded-pill px-4 py-2 shadow-sm d-flex align-items-center text-muted">
+            <i class="bi bi-arrow-left me-2"></i> <span>ກັບໄປໜ້າລາຍການ</span>
+        </a>
+    </div>
+
+    <div class="card p-5 shadow-sm" style="border-radius: 20px; border: none;">
+        
+        <div class="row mb-5 pb-4" style="border-bottom: 2px solid #f4f7fe;">
+            <div class="col-md-3">
+                <div class="text-muted fw-bold mb-1">ລະຫັດເຄມ</div>
+                <div class="h4 fw-bold" style="color: #4318ff;">{{ claim.claim_id }}</div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted fw-bold mb-1">ວັນທີຮັບເຄມ</div>
+                <div class="h5 fw-bold text-secondary">{{ claim.claim_date|date:"d/m/Y H:i" }}</div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted fw-bold mb-1">ລູກຄ້າ</div>
+                <div class="h5 fw-bold" style="color: #2b3674;">
+                    {% if claim.sale_detail.sale.cus %}{{ claim.sale_detail.sale.cus.cus_name }}{% else %}ລູກຄ້າທົ່ວໄປ{% endif %}
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted fw-bold mb-1">ສິນຄ້າທີ່ເຄມ</div>
+                <div class="h5 fw-bold" style="color: #2b3674;">{{ claim.sale_detail.pro.pro_name }}</div>
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold mb-2" style="color: #2b3674;">
+                        <i class="bi bi-chat-left-dots me-2 text-primary"></i>ອາການເບື້ອງຕົ້ນ/ບັນຫາ
+                    </label>
+                    <textarea name="symptom" class="form-control" rows="5" 
+                        style="background-color: #f4f7fe; border-radius: 15px; border: 1px solid #e2e8f0; padding: 15px; font-weight: 500;"
+                        placeholder="ປ້ອນລາຍລະອຽດອາການເສຍ..." required>{{ claim.symptom }}</textarea>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold mb-2" style="color: #2b3674;">
+                        <i class="bi bi-flag me-2 text-primary"></i>ອັບເດດສະຖານະ
+                    </label>
+                    <select name="status" class="form-select form-select-lg" 
+                        style="background-color: #f4f7fe; border-radius: 15px; border: 1px solid #e2e8f0; padding: 15px; font-weight: 700; color: #2b3674; font-size: 1.1rem; height: 60px;" required>
+                        
+                        <option value="ລໍຖ້າກວດສອບ" {% if claim.status == 'ລໍຖ້າກວດສອບ' %}selected{% endif %}>
+                            ລໍຖ້າກວດສອບ
+                        </option>
+                        <option value="ກຳລັງສ້ອມແປງ" {% if claim.status == 'ກຳລັງສ້ອມແປງ' %}selected{% endif %}>
+                            ກຳລັງສ້ອມແປງ
+                        </option>
+                        <option value="ສ້ອມແປງສຳເລັດ" {% if claim.status == 'ສ້ອມແປງສຳເລັດ' %}selected{% endif %}>
+                            ສ້ອມແປງສຳເລັດ
+                        </option>
+                        <option value="ປະຕິເສດການເຄມ" {% if claim.status == 'ປະຕິເສດການເຄມ' %}selected{% endif %}>
+                            ປະຕິເສດການເຄມ
+                        </option>
+                    </select>
+                    <div class="form-text mt-2 text-muted px-2">ກະລຸນາເລືອກສະຖານະລ້າສຸດເພື່ອຕິດຕາມວຽກ</div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 2px solid #f4f7fe;">
+                <a href="{% url 'claim_list' %}" class="btn btn-light rounded-pill px-5 py-3 shadow-sm d-flex align-items-center text-muted fw-bold">
+                    ยกເລີກ
+                </a>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 shadow-sm d-flex align-items-center fw-bold" style="background-color: #4318ff; border-color: #4318ff;">
+                    <i class="bi bi-save me-2"></i> ບັນທຶກການປ່ຽນແປງ
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<style>
+    /* ປັບ Style Dropdown ໃຫ້ເບິ່ງທັນສະໄໝ */
+    .form-select:focus, .form-control:focus {
+        border-color: #4318ff !important;
+        box-shadow: 0 0 0 0.25rem rgba(67, 24, 255, 0.1) !important;
+        background-color: #fff !important;
+    }
+</style>
+{% endblock %}

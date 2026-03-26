@@ -35,7 +35,3 @@ admin.site.register(SaleDetail)
 admin.site.register(Shipping)
 admin.site.register(Claim)
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('store.urls')),  #ເຊື່ອມຕໍ່ URL ຂອງແອັບ store
-]

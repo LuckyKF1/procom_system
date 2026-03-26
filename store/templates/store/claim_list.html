@@ -12,13 +12,19 @@
     </div>
 
     <div class="card p-3 mb-4 d-flex flex-row align-items-center justify-content-between">
-        <form method="GET" class="w-100 d-flex gap-3 align-items-center">
-            <div class="input-group" style="background-color: #f4f7fe; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; max-width: 500px;">
+        <form method="GET" action="{% url 'claim_list' %}" class="w-100 d-flex gap-3 align-items-center">
+            <div class="input-group" style="background-color: #f4f7fe; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; max-width: 400px;">
                 <span class="input-group-text bg-transparent border-0 text-muted px-3">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" name="search" class="form-control bg-transparent border-0 shadow-none ps-0" placeholder="ຄົ້ນຫາດ້ວຍຊື່ສິນຄ້າ ຫຼື ລະຫັດເຄມ..." value="{{ search_query }}">
+                <input type="text" name="search" value="{{ search_query }}" class="form-control bg-transparent border-0 shadow-none ps-0" placeholder="ຄົ້ນຫາດ້ວຍຊື່ສິນຄ້າ, ລະຫັດເຄມ ຫຼື ຊື່ລູກຄ້າ...">
             </div>
+            <select name="status" class="form-select" style="border-radius: 12px; border: 1px solid #e2e8f0; max-width: 200px;">
+                <option value="">ສະຖານະທັງໝົດ</option>
+                    <option value="ລໍຖ້າກວດສອບ" {% if status_filter == 'ລໍຖ້າກວດສອບ' %}selected{% endif %}>ລໍຖ້າກວດສອບ</option>
+                    <option value="ກຳລັງສ້ອມແປງ" {% if status_filter == 'ກຳລັງສ້ອມແປງ' %}selected{% endif %}>ກຳລັງສ້ອມແປງ</option>
+                    <option value="ສ້ອມແປງສຳເລັດ" {% if status_filter == 'ສ້ອມແປງສຳເລັດ' %}selected{% endif %}>ສ້ອມແປງສຳເລັດ</option>
+            </select>
             <button type="submit" class="btn btn-primary" style="border-radius: 12px; font-weight: 600; padding: 10px 25px;">
                 ຄົ້ນຫາ
             </button>
@@ -73,7 +79,7 @@
                         
                         <td class="py-3 text-center">
                             <div class="d-flex justify-content-center">
-                                <a href="#" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(67, 24, 255, 0.1); color: #4318ff; border-radius: 10px;" title="ອັບເດດສະຖານະ/ແກ້ໄຂ">
+                                <a href="{% url 'edit_claim' c.claim_id %}" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(67, 24, 255, 0.1); color: #4318ff; border-radius: 10px;" title="ອັບເດດສະຖານະ/ແກ້ໄຂ">
                                     <i class="bi bi-pencil-fill"></i>
                                 </a>
                             </div>

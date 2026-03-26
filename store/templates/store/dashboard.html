@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <p class="mb-1 fw-bold text-muted" style="font-size: 0.9rem;">ຈຳນວນບິນມື້ນີ້</p>
-                    <h4 class="mb-0 fw-bold">{{ count_sales|default:0 }} <span class="fs-6 text-muted">ບິນ</span></h4>
+                    <h4 class="mb-0 fw-bold">{{ total_orders|default:0 }} <span class="fs-6 text-muted">ບິນ</span></h4>
                 </div>
             </div>
         </div>
@@ -45,7 +45,7 @@
                 </div>
                 <div>
                     <p class="mb-1 fw-bold text-muted" style="font-size: 0.9rem;">ສິນຄ້າໃນຄັງທັງໝົດ</p>
-                    <h4 class="mb-0 fw-bold">{{ count_products|default:0 }} <span class="fs-6 text-muted">ລາຍການ</span></h4>
+                    <h4 class="mb-0 fw-bold">{{ total_products|default:0 }} <span class="fs-6 text-muted">ລາຍການ</span></h4>
                 </div>
             </div>
         </div>
@@ -57,7 +57,7 @@
                 </div>
                 <div>
                     <p class="mb-1 fw-bold text-muted" style="font-size: 0.9rem;">ສິນຄ້າລໍຖ້າເຄມ</p>
-                    <h4 class="mb-0 fw-bold">{{ count_claims|default:0 }} <span class="fs-6 text-muted">ລາຍການ</span></h4>
+                    <h4 class="mb-0 fw-bold">{{ total_claims|default:0 }}<span class="fs-6 text-muted">ລາຍການ</span></h4>
                 </div>
             </div>
         </div>
