@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.contrib import messages
 from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit
 
+
 # ຟັງຊັນເຂົ້າສູ່ລະບົບ (Login)
 def login_view(request):
     if request.user.is_authenticated:
@@ -31,7 +32,7 @@ def login_view(request):
             messages.error(request, "ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!")
 
     shop = ShopInfo.objects.first()
-    return render(request, "store/login.html")
+    return render(request, "store/login.html", {"shop": shop})
 
 
 def is_admin(user):
@@ -101,113 +102,6 @@ def product_list(request):
         "store/product_list.html",
         {"products": products, "search_query": search_query},
     )
-
-
-@login_required(login_url="login")
-def add_product(request):
-    if request.method == "POST":
-        # ຮັບຄ່າຈາກຟອມ
-        pro_id = request.POST.get("pro_id")
-        pro_name = request.POST.get("pro_name")
-        price_buy = float(request.POST.get("price_buy", 0))
-        price_sale = float(request.POST.get("price_sale", 0))
-        qty = int(request.POST.get("qty", 0))
-
-        cat_id = request.POST.get("cat")
-        brand_id = request.POST.get("brand")
-        unit_id = request.POST.get("unit")
-
-        pro_img = request.FILES.get("pro_img")
-
-        # ກວດສອບວ່າລະຫັດສິນຄ້າຊ້ຳກັນຫຼືບໍ່
-        if Product.objects.filter(pro_id=pro_id).exists():
-            messages.error(request, "ລະຫັດສິນຄ້ານີ້ມີໃນລະບົບແລ້ວ! ກະລຸນາໃຊ້ລະຫັດອື່ນ.")
-            return redirect("add_product")
-
-        # ດຶງຂໍ້ມູນ Object ຂອງ ໝວດໝູ່, ຍີ່ຫໍ້, ຫົວໜ່ວຍ
-        cat = get_object_or_404(Category, cat_id=cat_id)
-        brand = get_object_or_404(Brand, brand_id=brand_id)
-        unit = get_object_or_404(Unit, unit_id=unit_id)
-
-        # ບັນທຶກລົງຖານຂໍ້ມູນ
-        Product.objects.create(
-            pro_id=pro_id,
-            pro_name=pro_name,
-            price_buy=price_buy,
-            price_sale=price_sale,
-            qty=qty,
-            cat=cat,
-            brand=brand,
-            unit=unit,
-            pro_img=pro_img,
-        )
-        messages.success(request, f"ເພີ່ມສິນຄ້າ {pro_name} ສຳເລັດແລ້ວ!")
-        return redirect("product_list")
-
-    # ສຳລັບສະແດງໜ້າຟອມ ດຶງຂໍ້ມູນ Dropdown ມາສະແດງ
-    categories = Category.objects.all()
-    brands = Brand.objects.all()
-    units = Unit.objects.all()
-
-    # ຢ່າລືມ return ຕົວແປອອກໄປໃຫ້ HTML ເດີ້
-    return render(
-        request,
-        "store/add_product.html",
-        {"categories": categories, "brands": brands, "units": units},
-    )
-
-
-# Add Claim (ອັບເດດໃໝ່ ໃຫ້ເຊື່ອມກັບ SaleDetail)
-@login_required(login_url="login")
-def add_claim(request):
-    if request.method == "POST":
-        # ຮັບຄ່າຈາກຟອມ
-        sale_detail_id = request.POST.get("sale_detail_id")
-        symptom = request.POST.get("symptom")
-        status = request.POST.get("status")
-
-        # ສ້າງລະຫັດເຄມແບບສຸ່ມ ເຊັ່ນ CLM1024
-        claim_id = f"CLM{random.randint(1000, 9999)}"
-
-        try:
-            # ດຶງຂໍ້ມູນການຂາຍທີ່ລູກຄ້າເອົາມາເຄມ
-            from .models import (
-                SaleDetail,
-                Employee,
-                Claim,
-            )  # Import model ຖ້າຍັງບໍ່ໄດ້ import
-
-            sale_detail = get_object_or_404(SaleDetail, pk=sale_detail_id)
-
-            # ສົມມຸດວ່າດຶງພະນັກງານຄົນທຳອິດມາເປັນຜູ້ຮັບເຄມ (ສຳລັບ Mock Data)
-            emp = Employee.objects.first()
-
-            if not emp:
-                messages.error(request, "ກະລຸນາເພີ່ມຂໍ້ມູນພະນັກງານ (Employee) ໃນ Admin ກ່ອນ!")
-                return redirect("add_claim")
-
-            # ບັນທຶກລົງຖານຂໍ້ມູນຂອງທ່ານ
-            Claim.objects.create(
-                claim_id=claim_id,
-                sale_detail=sale_detail,
-                emp=emp,
-                symptom=symptom,
-                status=status,
-            )
-            messages.success(request, "ບັນທຶກລາຍການເຄມສຳເລັດແລ້ວ!")
-            return redirect("claim_list")
-
-        except Exception as e:
-            messages.error(request, f"ເກີດຂໍ້ຜິດພາດ: {str(e)}")
-            return redirect("add_claim")
-
-    # ສຳລັບສະແດງໜ້າຟອມ ໃຫ້ດຶງເອົາສະເພາະລາຍການທີ່ເຄີຍ "ຂາຍແລ້ວ" ມາໃຫ້ເລືອກເຄມ
-    from .models import SaleDetail
-
-    sale_details = SaleDetail.objects.all().order_by("-sale__sale_date")
-
-    return render(request, "store/add_claim.html", {"sale_details": sale_details})
-
 
 # POS Page (ຈັດການທັງສະແດງສິນຄ້າ ແລະ ຄິດໄລ່ເງິນລວມ)
 @login_required(login_url="login")
@@ -312,9 +206,9 @@ def checkout(request):
             return redirect("pos")
 
         # 4. ດຶງຂໍ້ມູນພະນັກງານທີ່ Login ຢູ່
-        emp = Employee.objects.filter(emp_name=request.user.username).first()
-        if not emp:
-            emp = Employee.objects.create(emp_id="EMP001", emp_name=request.user.username)
+        emp, created = Employee.objects.get_or_create(
+            emp_name=request.user.username,
+            defaults={"emp_id": f"EMP{random.randint(100,999)}"})
 
         customer = Customer.objects.filter(cus_id=cus_id).first() if cus_id else None
         sale_id = f"S{str(int(timezone.now().timestamp()))[-8:]}"
@@ -357,22 +251,6 @@ def checkout(request):
     return redirect("pos")
 
 
-# Receipt View
-@login_required(login_url="login")
-def receipt(request, sale_id):
-    sale = get_object_or_404(Sale, sale_id=sale_id)
-    details = SaleDetail.objects.filter(sale=sale)
-
-    # ດຶງຂໍ້ມູນການຊຳລະເງິນຈາກ session ແລະ ລົບອອກຫຼັງຈາກດຶງແລ້ວ
-    payment_info = request.session.pop("payment_info", None)
-
-    return render(
-        request,
-        "store/receipt.html",
-        {"sale": sale, "details": details, "payment_info": payment_info},
-    )
-
-
 @login_required(login_url="login")
 @user_passes_test(is_admin, login_url="dashboard")
 def sales_report(request):
@@ -409,84 +287,6 @@ def sales_report(request):
         "status_filter": status_filter,
         "search_query": search_query
     })
-
-
-@login_required(login_url="login")
-@user_passes_test(is_admin, login_url="dashboard")
-def shop_settings(request):
-    shop = ShopInfo.objects.first()
-    if not shop:
-        shop = ShopInfo.objects.create(
-            shop_id="SH001", shop_name="Procom Store", tel="-", address="-"
-        )
-
-    if request.method == "POST":
-        shop.shop_name = request.POST.get("shop_name")
-        shop.tel = request.POST.get("tel")
-        shop.address = request.POST.get("address")
-
-        if "logo" in request.FILES:
-            shop.logo = request.FILES["logo"]
-
-        shop.save()
-        messages.success(request, "ບັນທຶກຂໍ້ມູນຮ້ານສຳເລັດແລ້ວ!")
-        return redirect("shop_settings")
-
-    return render(request, "store/shop_settings.html", {"shop": shop})
-
-
-@login_required(login_url="login")
-def import_stock(request):
-    # ດຶງຂໍ້ມູນຜູ້ສະໜອງ ແລະ ສິນຄ້າ ເພື່ອໃຊ້ໃນ import stock form
-    suppliers = Supplier.objects.all()
-    products = Product.objects.all()
-
-    if request.method == "POST":
-        sup_id = request.POST.get("sup_id")
-        pro_id = request.POST.get("pro_id")
-        qty = int(request.POST.get("qty", 0))
-        price = float(request.POST.get("price", 0))
-
-        if qty > 0 and price >= 0:
-            supplier = get_object_or_404(Supplier, sup_id=sup_id)
-            product = get_object_or_404(Product, pro_id=pro_id)
-
-            # ດຶງຂໍ້ມູນພນັກງານ
-            emp = Employee.objects.first()
-            if not emp:
-                emp = Employee.objects.create(emp_id="EMP001", emp_name="Admin")
-
-            imp_id = f"IMP{int(timezone.now().timestamp())}"
-            total_amount = qty * price
-
-            stock_imp = StockImport.objects.create(
-                imp_id=imp_id, total_amount=total_amount, sup=supplier, emp=emp
-            )
-
-            ImportDetail.objects.create(
-                imp=stock_imp, pro=product, qty=qty, price=price
-            )
-
-            #
-            product.qty += qty
-            product.price_buy = (
-                price  # ອັບເດດລາຄາຊື້ໃນ product table ແລະ ກວດສອບວ່າ ມີ logo ແລ້ວ ຫຼື ຍັງ
-            )
-            product.save()
-
-            messages.success(
-                request, f"ນຳເຂົ້າສິນຄ້າ {product.pro_name} ຈຳນວນ {qty} ຊິ້ນ ສຳເລັດແລ້ວ!"
-            )
-            return redirect("import_stock")
-        else:
-            messages.error(request, "ກະລຸນາປ້ອນຈຳນວນ ແລະ ລາຄາໃຫ້ຖືກຕ້ອງ!")
-
-    return render(
-        request,
-        "store/import_stock.html",
-        {"suppliers": suppliers, "products": products},
-    )
-
 
 @login_required(login_url="login")
 def edit_claim(request, claim_id):
@@ -551,28 +351,6 @@ def delete_product(request, pro_id):
     messages.success(request, f"ລຶບສິນຄ້າ {pro_name} ອອກຈາກຄັງສຳເລັດແລ້ວ!")
     return redirect("product_list")
 
-
-# Product List
-@login_required(login_url="login")
-def product_list(request):
-    search_query = request.GET.get("search", "")
-    products = Product.objects.all()
-
-    if search_query:
-        products = products.filter(
-            Q(pro_name__icontains=search_query)
-            | Q(pro_id__icontains=search_query)
-            | Q(cat__cat_name__icontains=search_query)
-            | Q(brand__brand_name__icontains=search_query)
-        ).distinct()
-
-    return render(
-        request,
-        "store/product_list.html",
-        {"products": products, "search_query": search_query},
-    )
-
-
 @login_required(login_url="login")
 def add_product(request):
     if request.method == "POST":
@@ -636,7 +414,7 @@ def add_claim(request):
         status = request.POST.get("status")
 
         # ສ້າງລະຫັດເຄມແບບສຸ່ມ ເຊັ່ນ CLM1024
-        claim_id = f"CLM{random.randint(1000, 9999)}"
+        claim_id = f"CLM{int(timezone.now().timestamp())}"
 
         try:
             # ດຶງຂໍ້ມູນການຂາຍທີ່ລູກຄ້າເອົາມາເຄມ
@@ -676,149 +454,6 @@ def add_claim(request):
     sale_details = SaleDetail.objects.all().order_by("-sale__sale_date")
 
     return render(request, "store/add_claim.html", {"sale_details": sale_details})
-
-
-# POS Page (ຈັດການທັງສະແດງສິນຄ້າ ແລະ ຄິດໄລ່ເງິນລວມ)
-@login_required(login_url="login")
-def pos(request):
-    search_query = request.GET.get("search", "")
-    if search_query:
-        products = Product.objects.filter(pro_name__icontains=search_query, qty__gt=0)
-    else:
-        products = Product.objects.filter(qty__gt=0)
-
-    customers = Customer.objects.all()
-    cart = request.session.get("cart", {})
-
-    total_price = sum(item["price"] * item["quantity"] for item in cart.values())
-    total_items = sum(item["quantity"] for item in cart.values())
-
-    context = {
-        "products": products,
-        "customers": customers,
-        "total_price": total_price,
-        "total_items": total_items,
-        "search_query": search_query,
-    }
-    return render(request, "store/pos.html", context)
-
-
-# Add to cart
-@login_required(login_url="login")
-def add_to_cart(request, pro_id):
-    product = get_object_or_404(Product, pro_id=pro_id)
-    cart = request.session.get("cart", {})
-
-    # ດຶງຈຳນວນສິນຄ້າທີ່ຢູ່ໃນ cart ແລະ ກວດສອບວ່າ ສິນຄ້າໃນ stock ພໍແລ້ວ ຫຼື ຍັງ
-    current_qty = cart.get(str(pro_id), {}).get("quantity", 0)
-
-    if product.qty > current_qty:
-        if str(pro_id) in cart:
-            cart[str(pro_id)]["quantity"] += 1
-        else:
-            cart[str(pro_id)] = {
-                "name": product.pro_name,
-                "price": float(product.price_sale),
-                "quantity": 1,
-            }
-        request.session["cart"] = cart
-    else:
-        # ສິນຄ້າໃນ stock ບໍ່ພໍແລ້ວ ແລະ ສະແດງແຈ້ງເຕືອນ
-        messages.error(
-            request, f"ແຈ້ງເຕືອນ: ສິນຄ້າ {product.pro_name} ໃນສະຕັອກມີພຽງ {product.qty} ຊິ້ນ!"
-        )
-
-    return redirect("pos")
-
-
-# Remove from cart
-@login_required(login_url="login")
-def remove_from_cart(request, pro_id):
-    cart = request.session.get("cart", {})
-    if str(pro_id) in cart:
-        del cart[str(pro_id)]
-        request.session["cart"] = cart
-    return redirect("pos")
-
-
-# Clear cart
-@login_required(login_url="login")
-def clear_cart(request):
-    if "cart" in request.session:
-        del request.session["cart"]
-    return redirect("pos")
-
-
-# Checkout and save to Database
-@login_required(login_url="login")
-def checkout(request):
-    if request.method == "POST":
-        cart = request.session.get("cart", {})
-        if not cart:
-            return redirect("pos")
-
-        # ດຶງຈຳນວນເງິນທີ່ຮັບມາ ແລະ ລາຍການເງິນເພາະໃນ checkout form
-        amount_paid = float(request.POST.get("amount_paid", 0))
-        cus_id = request.POST.get("cus_id")
-
-        total_amount = sum(item["price"] * item["quantity"] for item in cart.values())
-
-        # ກວດສອບວ່າ ຈຳນວນເງິນທີ່ຮັບມາ ພໍແລ້ວ ຫຼື ຍັງບໍ່ພໍແລ້ວ
-        if amount_paid < total_amount:
-            messages.error(request, "ຈຳນວນເງິນທີ່ຮັບມາບໍ່ພຽງພໍ!")
-            return redirect("pos")
-
-        change_amount = amount_paid - total_amount
-
-        # ສ່ວນໃໝ່ທີ່ປອດໄພກວ່າ
-# ພະຍາຍາມດຶງພະນັກງານຄົນທຳອິດທີ່ມີໃນລະບົບມາໃຊ້ກ່ອນ (ຫຼື ດຶງຕາມຊື່ User)
-        emp = Employee.objects.filter(emp_name=request.user.username).first()
-
-        if not emp:
-            emp = Employee.objects.first() # ຖ້າຫາຕາມຊື່ບໍ່ເຫັນ ໃຫ້ເອົາຄົນທຳອິດໃນ DB ມາເລີຍ
-
-        if not emp:
-            # ຖ້າໃນ Database ຍັງບໍ່ມີພະນັກງານຈັກຄົນເລີຍ ແທ້ໆ
-            messages.error(request, "ບໍ່ມີຂໍ້ມູນພະນັກງານໃນລະບົບ! ກະລຸນາເພີ່ມພະນັກງານໃນ Admin ກ່ອນ.")
-            return redirect("pos")
-
-        # ດຶງຂໍ້ມູນລູກຄ້າ ຖ້າມີ cus_id ແລະ ສ້າງ sale record ແລ້ວເກັບ sale_id ໄວ້
-        customer = Customer.objects.filter(cus_id=cus_id).first() if cus_id else None
-
-        sale_id = f"S{str(int(timezone.now().timestamp()))[-8:]}"
-
-        # ສ້າງ sale record ແລ້ວເກັບ sale_id ໄວ້
-        new_sale = Sale.objects.create(
-            sale_id=sale_id,
-            total_amount=total_amount,
-            emp=emp,
-            cus=customer,
-            status="Paid",
-        )
-
-        # ສ້າງ sale detail records ແລະ ອັບເດດ stock ໃນ product table
-        for pid, item in cart.items():
-            product = Product.objects.get(pro_id=pid)
-            SaleDetail.objects.create(
-                sale=new_sale, pro=product, qty=item["quantity"], price=item["price"]
-            )
-            # ອັບເດດ stock ໃນ product table
-            product.qty -= item["quantity"]
-            product.save()
-
-        request.session["cart"] = {}
-
-        # ກວດສອບວ່າ ຈຳນວນເງິນທີ່ຮັບມາ ພໍແລ້ວ ຫຼື ຍັງບໍ່ພໍແລ້ວ
-        request.session["payment_info"] = {
-            "amount_paid": amount_paid,
-            "change_amount": change_amount,
-        }
-
-        # ສົ່ງໄປຫາ receipt page ແລະ ສະແດງ messages ໃນ receipt page ກ່ອນ redirect
-        return redirect("receipt", sale_id=new_sale.sale_id)
-
-    return redirect("pos")
-
 
 @login_required(login_url="login")
 def receipt(request, sale_id):
@@ -922,71 +557,6 @@ def import_stock(request):
         {"suppliers": suppliers, "products": products},
     )
 
-
-@login_required(login_url="login")
-def edit_claim(request, claim_id):
-    claim = get_object_or_404(Claim, claim_id=claim_id)
-
-    if request.method == "POST":
-        claim.symptom = request.POST.get("symptom")
-        claim.status = request.POST.get("status")
-        claim.save()
-        messages.success(request, f"ແກ້ໄຂຂໍ້ມູນການເຄມ {claim.claim_id} ສຳເລັດແລ້ວ!")
-        return redirect("claim_list")
-
-    return render(request, "store/edit_claim.html", {"claim": claim})
-
-
-# ຟັງຊັນສຳລັບແກ້ໄຂສິນຄ້າ
-@login_required(login_url="login")
-def edit_product(request, pro_id):
-    product = get_object_or_404(Product, pro_id=pro_id)
-
-    if request.method == "POST":
-        product.pro_name = request.POST.get("pro_name")
-        product.price_buy = float(request.POST.get("price_buy", 0))
-        product.price_sale = float(request.POST.get("price_sale", 0))
-        product.qty = int(request.POST.get("qty", 0))
-
-        cat_id = request.POST.get("cat_id")
-        brand_id = request.POST.get("brand_id")
-        unit_id = request.POST.get("unit_id")
-
-        product.cat = get_object_or_404(Category, cat_id=cat_id)
-        product.brand = get_object_or_404(Brand, brand_id=brand_id)
-        product.unit = get_object_or_404(Unit, unit_id=unit_id)
-
-        product.save()
-        messages.success(request, f"ແກ້ໄຂຂໍ້ມູນສິນຄ້າ {product.pro_name} ສຳເລັດແລ້ວ!")
-        return redirect("product_list")
-
-    # ດຶງຂໍ້ມູນມາສະແດງໃນ Dropdown
-    categories = Category.objects.all()
-    brands = Brand.objects.all()
-    units = Unit.objects.all()
-
-    return render(
-        request,
-        "store/edit_product.html",
-        {
-            "product": product,
-            "categories": categories,
-            "brands": brands,
-            "units": units,
-        },
-    )
-
-
-# ຟັງຊັນສຳລັບລຶບສິນຄ້າ
-@login_required(login_url="login")
-def delete_product(request, pro_id):
-    product = get_object_or_404(Product, pro_id=pro_id)
-    pro_name = product.pro_name  # ເກັບຊື່ໄວ້ສະແດງແຈ້ງເຕືອນກ່ອນລຶບ
-    product.delete()
-    messages.success(request, f"ລຶບສິນຄ້າ {pro_name} ອອກຈາກຄັງສຳເລັດແລ້ວ!")
-    return redirect("product_list")
-
-
 # Claim List
 @login_required(login_url="login")
 def claim_list(request):
@@ -1000,7 +570,7 @@ def claim_list(request):
 
     if not (search_query or status_filter):
         claims = claims.filter(
-            Q(claim_date__date__gte=last_week) | 
+            Q(claim_date__date__gte=last_week) |
             Q(status__in=["Processing", "Repairing", "ລໍຖ້າກວດສອບ", "ກຳລັງສ້ອມແປງ"])
         )
 
