@@ -1,0 +1,87 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 p-4" style="border-radius: 20px;">
+            <h5 class="fw-bold mb-3" style="color: #2b3674;">
+                <i class="bi bi-patch-check-fill me-2 text-success"></i>ເພີ່ມຍີ່ຫໍ້
+            </h5>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted mb-2">ລະຫັດຍີ່ຫໍ້ (ID)</label>
+                    <input type="text" name="brand_id" class="form-control shadow-none" placeholder="B001" required>
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted mb-2">ຊື່ຍີ່ຫໍ້</label>
+                    <input type="text" name="brand_name" class="form-control shadow-none" placeholder="ຕົວຢ່າງ: ASUS, Apple..." required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">
+                    <i class="bi bi-save me-2"></i>ບັນທຶກ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 p-4" style="border-radius: 20px;">
+            <h5 class="fw-bold mb-3" style="color: #2b3674;">ລາຍການຍີ່ຫໍ້ທັງໝົດ</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead style="background-color: #f4f7fe;">
+                        <tr>
+                            <th class="py-3 px-4 border-0 text-muted">ID</th>
+                            <th class="py-3 border-0 text-muted">ຊື່ຍີ່ຫໍ້</th>
+                            <th class="py-3 text-center border-0 text-muted">ຈັດການ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in brands %}
+                        <tr>
+                            <td class="px-4 fw-bold text-primary">{{ b.brand_id }}</td>
+                            <td class="fw-medium">{{ b.brand_name }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm text-primary me-2" data-bs-toggle="modal" data-bs-target="#editBrand{{ b.brand_id }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <a href="{% url 'delete_brand' b.brand_id %}" class="btn btn-sm text-danger" onclick="return confirm('ຢືນຢັນການລຶບຍີ່ຫໍ້ນີ້?')">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="editBrand{{ b.brand_id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                                    <div class="modal-header border-0 pb-0">
+                                        <h5 class="fw-bold"><i class="bi bi-pencil-fill me-2 text-primary"></i>ແກ້ໄຂຍີ່ຫໍ້</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="{% url 'edit_brand' b.brand_id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <div class="mb-2">
+                                                <label class="small fw-bold text-muted mb-2">ຊື່ຍີ່ຫໍ້ໃໝ່</label>
+                                                <input type="text" name="brand_name" value="{{ b.brand_name }}" class="form-control shadow-none" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0 pt-0">
+                                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ຍົກເລີກ</button>
+                                            <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">ບັນທຶກການແກ້ໄຂ</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted">ຍັງບໍ່ມີຂໍ້ມູນຍີ່ຫໍ້</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

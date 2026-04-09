@@ -16,11 +16,10 @@
         /* Modern Dribbble-inspired UI */
         body {
             font-family: 'Noto Sans Lao', sans-serif;
-            background-color: #f4f7fe; /* ສີພື້ນຫຼັງເທົາອົມຟ້າອ່ອນໆ ໃຫ້ເບິ່ງສະອາດຕາ */
-            color: #2b3674; /* ສີຕົວໜັງສືຫຼັກ */
+            background-color: #f4f7fe;
+            color: #2b3674;
         }
 
-        /* Navbar Styles */
         .navbar {
             background-color: #ffffff !important;
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
@@ -28,22 +27,22 @@
         }
         .navbar-brand {
             font-weight: 800;
-            letter-spacing: 0.5px;
             color: #2b3674 !important;
             font-size: 1.4rem;
         }
 
-        /* Nav Links */
         .nav-link {
             color: #a3aed1 !important;
             font-weight: 600;
             transition: all 0.3s ease;
             border-radius: 12px;
             padding: 10px 16px !important;
-            margin: 0 5px;
+            margin: 0 2px;
             display: flex;
             align-items: center;
-            gap: 8px; /* ຍະຫວ່າງລະຫວ່າງໄອຄອນ ກັບ ຕົວໜັງສື */
+            gap: 6px;
+            font-size: 0.95rem;
+            white-space: nowrap;
         }
         .nav-link:hover {
             color: #4318ff !important;
@@ -55,63 +54,35 @@
             box-shadow: 0 4px 10px rgba(67, 24, 255, 0.25);
         }
 
-        /* Cards */
-        .card {
-            border: none;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            background-color: #ffffff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        /* ແກ້ໄຂສ່ວນ Dropdown ໃຫ້ສີກົງກັນ */
+        .navbar-nav .nav-item.dropdown .nav-link.dropdown-toggle {
+            color: #a3aed1 !important;
+            background-color: transparent !important;
+        }
+        .navbar-nav .nav-item.dropdown .nav-link.dropdown-toggle.active {
+            color: #ffffff !important;
+            background-color: #4318ff !important;
+        }
+        .navbar-nav .nav-item.dropdown .nav-link.dropdown-toggle:hover {
+            color: #4318ff !important;
+            background-color: #f4f7fe !important;
         }
 
-        /* Buttons */
-        .btn {
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 10px 20px;
-            letter-spacing: 0.3px;
-            transition: all 0.2s;
-        }
-        .btn-primary {
-            background-color: #4318ff;
-            border-color: #4318ff;
-        }
-        .btn-primary:hover {
-            background-color: #3311cc;
-            border-color: #3311cc;
-            box-shadow: 0 5px 15px rgba(67, 24, 255, 0.4);
-        }
-        .btn-success { background-color: #05cd99; border-color: #05cd99; }
-        .btn-success:hover { background-color: #04b082; box-shadow: 0 5px 15px rgba(5, 205, 153, 0.4); }
-
-        /* Forms */
-        .form-control, .form-select {
-            border-radius: 12px;
-            padding: 12px 15px;
-            border: 1px solid #e2e8f0;
-            color: #2b3674;
-            background-color: #fcfcfc;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #4318ff;
-            box-shadow: 0 0 0 0.25rem rgba(67, 24, 255, 0.1);
-            background-color: #ffffff;
-        }
-
-        /* Typography */
-        h1, h2, h3, h4, h5, h6 { font-weight: 800; color: #2b3674; }
-
-        /* Dropdown Profile */
         .dropdown-menu {
             border-radius: 15px;
             border: none;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
+
+        .card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+        .btn { border-radius: 12px; font-weight: 600; padding: 10px 20px; }
+        .btn-primary { background-color: #4318ff; border-color: #4318ff; }
+        .form-control, .form-select { border-radius: 12px; padding: 12px 15px; background-color: #fcfcfc; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light sticky-top">
-        <div class="container">
+        <div class="container-fluid px-4">
             <a class="navbar-brand d-flex align-items-center" href="/">
                 {% if shop and shop.logo %}
                     <img src="{{ shop.logo.url }}" alt="Shop Logo" style="height: 42px; width: 42px; object-fit: cover; border-radius: 10px;" class="me-2 shadow-sm">
@@ -146,65 +117,56 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'edit_product' %}active{% endif %}" href="{% url 'product_list' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}" href="{% url 'product_list' %}">
                             <i class="bi bi-box-seam-fill"></i> ຄັງສິນຄ້າ
                         </a>
                     </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'category' in request.path or 'brand' in request.path or 'unit' in request.path or 'supplier' in request.path %}active{% endif %}" 
+                           href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-gear-wide-connected"></i> ຂໍ້ມູນພື້ນຖານ
+                        </a>
+                        <ul class="dropdown-menu border-0 shadow-sm mt-2">
+                            <li><a class="dropdown-item py-2 fw-semibold" href="{% url 'supplier_list' %}"><i class="bi bi-truck me-2 text-info"></i> ຜູ້ສະໜອງ</a></li>
+                            <li><a class="dropdown-item py-2 fw-semibold" href="{% url 'category_list' %}"><i class="bi bi-tags-fill me-2 text-primary"></i> ໝວດໝູ່</a></li>
+                            <li><a class="dropdown-item py-2 fw-semibold" href="{% url 'brand_list' %}"><i class="bi bi-patch-check-fill me-2 text-success"></i> ຍີ່ຫໍ້</a></li>
+                            <li><a class="dropdown-item py-2 fw-semibold" href="{% url 'unit_list' %}"><i class="bi bi-rulers me-2 text-warning"></i> ຫົວໜ່ວຍ</a></li>
+                        </ul>
+                    </li>
+
                     <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'claim_list' or request.resolver_match.url_name == 'add_claim' %}active{% endif %}" href="{% url 'claim_list' %}">
+                        <a class="nav-link {% if 'claim' in request.path %}active{% endif %}" href="{% url 'claim_list' %}">
                             <i class="bi bi-tools"></i> ເຄມສິນຄ້າ
                         </a>
                     </li>
 
                     {% if user.is_superuser %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'sales_report' %}active{% endif %}" href="{% url 'sales_report' %}">
-                            <i class="bi bi-bar-chart-fill"></i> ລາຍງານ
+                        <a class="nav-link {% if 'employee' in request.path %}active{% endif %}" href="{% url 'employee_list' %}">
+                            <i class="bi bi-people-fill"></i> ພະນັກງານ
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'shop_settings' %}active{% endif %}" href="{% url 'shop_settings' %}">
-                            <i class="bi bi-gear-fill"></i> ຕັ້ງຄ່າຮ້ານ
+                        <a class="nav-link {% if 'report' in request.path %}active{% endif %}" href="{% url 'all_reports' %}">
+                            <i class="bi bi-bar-chart-fill"></i> ລາຍງານ
                         </a>
                     </li>
                     {% endif %}
                 </ul>
 
                 <div class="dropdown">
-    <a class="text-decoration-none dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #2b3674; font-weight: 700;">
-        <div class="rounded-circle d-flex align-items-center justify-content-center me-2 text-white shadow-sm" style="width: 38px; height: 38px; background-color: #4318ff;">
-            <i class="bi bi-person-fill"></i>
-        </div>
-        <div class="d-flex flex-column">
-            <span class="text-uppercase" style="line-height: 1;">{{ request.user.username }}</span>
-            <small style="font-size: 0.65rem; color: #a3aed1;">
-                {% if request.user.is_superuser %}
-                    <i class="bi bi-shield-check text-danger"></i> ADMIN
-                {% else %}
-                    <i class="bi bi-person-badge text-primary"></i> STAFF
-                {% endif %}
-            </small>
-        </div>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 py-2" style="border-radius: 15px; min-width: 200px;">
-        <li class="px-3 py-2 small fw-bold" style="color: #a3aed1;">ສະຖານະ:
-            {% if request.user.is_authenticated %}
-                <span class="text-success">Online</span>
-            {% else %}
-                <span class="text-secondary">Offline</span>
-            {% endif %}
-        </li>
-        <li>
-            <a class="dropdown-item py-2 fw-semibold text-secondary" href="/admin/" target="_blank">
-                <i class="bi bi-shield-lock-fill me-2" style="color: #4318ff;"></i> ຖານຂໍ້ມູນ (Admin)</a>
-                    </li>
-                        <li><hr class="dropdown-divider opacity-10"></li>
-                            <li>
-                                <a class="dropdown-item py-2 fw-semibold text-danger" href="{% url 'logout' %}">
-                                <i class="bi bi-box-arrow-right me-2"></i> ອອກຈາກລະບົບ</a>
-                            </li>
-                        </ul>
-                    </div>
+                    <a class="text-decoration-none dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" style="color: #2b3674; font-weight: 700;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2 text-white shadow-sm" style="width: 38px; height: 38px; background-color: #4318ff;">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <span class="text-uppercase">{{ request.user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 py-2">
+                        <li><a class="dropdown-item py-2 fw-semibold" href="/admin/"><i class="bi bi-shield-lock-fill me-2 text-primary"></i> Admin Panel</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item py-2 fw-semibold text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i> ອອກຈາກລະບົບ</a></li>
+                    </ul>
                 </div>
             </div>
         </div>

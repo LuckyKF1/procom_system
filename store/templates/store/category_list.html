@@ -1,0 +1,83 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 p-4" style="border-radius: 20px;">
+            <h5 class="fw-bold mb-3" style="color: #2b3674;">
+                <i class="bi bi-tag-fill me-2 text-primary"></i>ເພີ່ມໝວດໝູ່
+            </h5>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted mb-2">ລະຫັດໝວດໝູ່ (ID)</label>
+                    <input type="text" name="cat_id" class="form-control shadow-none" placeholder="C001" required>
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted mb-2">ຊື່ໝວດໝູ່</label>
+                    <input type="text" name="cat_name" class="form-control shadow-none" placeholder="ຕົວຢ່າງ: Laptop" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2">
+                    <i class="bi bi-save me-2"></i>ບັນທຶກ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 p-4" style="border-radius: 20px;">
+            <h5 class="fw-bold mb-3" style="color: #2b3674;">ລາຍການໝວດໝູ່ທັງໝົດ</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead style="background-color: #f4f7fe;">
+                        <tr>
+                            <th class="py-3 px-4 border-0 text-muted">ID</th>
+                            <th class="py-3 border-0 text-muted">ຊື່ໝວດໝູ່</th>
+                            <th class="py-3 text-center border-0 text-muted">ຈັດການ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in categories %}
+                        <tr>
+                            <td class="px-4 fw-bold text-primary">{{ c.cat_id }}</td>
+                            <td class="fw-medium">{{ c.cat_name }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm text-primary me-2" data-bs-toggle="modal" data-bs-target="#editCat{{ c.cat_id }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <a href="{% url 'delete_category' c.cat_id %}" class="btn btn-sm text-danger" onclick="return confirm('ຢືນຢັນການລຶບ?')">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="editCat{{ c.cat_id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                                    <div class="modal-header border-0 pb-0">
+                                        <h5 class="fw-bold"><i class="bi bi-pencil-fill me-2 text-primary"></i>ແກ້ໄຂໝວດໝູ່</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="{% url 'edit_category' c.cat_id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <div class="mb-2">
+                                                <label class="small fw-bold text-muted mb-2">ຊື່ໝວດໝູ່ໃໝ່</label>
+                                                <input type="text" name="cat_name" value="{{ c.cat_name }}" class="form-control shadow-none" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0 pt-0">
+                                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ຍົກເລີກ</button>
+                                            <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">ບັນທຶກການແກ້ໄຂ</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

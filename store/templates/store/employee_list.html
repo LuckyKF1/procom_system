@@ -1,0 +1,40 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="card shadow-sm border-0 p-4" style="border-radius: 20px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-dark mb-0">ລາຍຊື່ພະນັກງານ (Employees)</h4>
+        <a href="{% url 'add_employee' %}" class="btn btn-primary fw-bold px-4 shadow-sm" style="border-radius: 12px; background-color: #4318ff;">
+            <i class="bi bi-person-plus-fill me-2"></i> ເພີ່ມພະນັກງານ
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="text-muted" style="background-color: #f4f7fe;">
+                <tr>
+                    <th class="py-3 px-4">ID</th>
+                    <th class="py-3">ຊື່ ແລະ ນາມສະກຸນ</th>
+                    <th class="py-3">ຕຳແໜ່ງ</th>
+                    <th class="py-3">ເບີໂທ</th>
+                    <th class="py-3 text-center">ຈັດການ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in employees %}
+                <tr>
+                    <td class="px-4 fw-bold text-primary">{{ e.emp_id }}</td>
+                    <td class="fw-medium">{{ e.emp_name }} {{ e.surname }}</td>
+                    <td><span class="badge bg-light text-dark px-3 py-2">{{ e.position }}</span></td>
+                    <td>{{ e.tel }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'delete_employee' e.emp_id %}" class="btn btn-sm text-danger" onclick="return confirm('ຢືນຢັນການລຶບ?')">
+                            <i class="bi bi-trash3-fill"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

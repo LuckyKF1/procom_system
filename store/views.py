@@ -69,6 +69,8 @@ def dashboard(request):
     # 4. ສິນຄ້າລໍຖ້າເຄມ (ໃຊ້ໃຫ້ກົງກັບ HTML: total_claims)
     # ກວດສອບວ່າໃນ Database ໃຊ້ຄຳວ່າ 'ລໍຖ້າກວດສອບ' ແທ້ຫຼືບໍ່
     total_claims = Claim.objects.filter(status="ລໍຖ້າກວດສອບ").count()
+    
+    total_stock_qty = Product.objects.aggregate(Sum('qty'))['qty__sum'] or 0
 
     context = {
         "total_sales": total_sales,
@@ -249,44 +251,6 @@ def checkout(request):
         return redirect("receipt", sale_id=new_sale.sale_id)
 
     return redirect("pos")
-
-
-@login_required(login_url="login")
-@user_passes_test(is_admin, login_url="dashboard")
-def sales_report(request):
-    today = timezone.now().date()
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    status_filter = request.GET.get('status')
-    search_query = request.GET.get("search", "")
-
-    sales = Sale.objects.all().order_by("-sale_date")
-
-    if start_date and end_date:
-        sales = sales.filter(sale_date__date__range=[start_date, end_date])
-    elif not search_query:
-        sales = sales.filter(sale_date__year=today.year, sale_date__month=today.month)
-    if status_filter:
-        sales = sales.filter(status=status_filter)
-    
-    if search_query:
-        sales = sales.filter(
-            Q(sale_id__icontains=search_query) | 
-            Q(cus__cus_name__icontains=search_query)
-        ).distinct()
-
-    total_revenue = sales.aggregate(Sum("total_amount"))["total_amount__sum"] or 0
-    total_bills = sales.count()
-
-    return render(request, "store/sales_report.html", {
-        "sales": sales,
-        "total_revenue": total_revenue,
-        "total_bills": total_bills,
-        "start_date": start_date,
-        "end_date": end_date,
-        "status_filter": status_filter,
-        "search_query": search_query
-    })
 
 @login_required(login_url="login")
 def edit_claim(request, claim_id):
@@ -588,3 +552,236 @@ def claim_list(request):
         "search_query": search_query,
         "status_filter": status_filter,
     })
+    
+@login_required(login_url="login")
+@user_passes_test(is_admin, login_url="dashboard")
+def employee_list(request):
+    search_query = request.GET.get("search", "")
+    employees = Employee.objects.all().order_by("emp_id")
+    
+    if search_query:
+        employees = employees.filter(
+            Q(emp_name__icontains=search_query) |
+            Q(emp_id__icontains=search_query)
+        )
+    
+    return render(request, "store/employee_list.html", {
+        "employees": employees,
+        "search_query": search_query
+    })
+
+@login_required(login_url="login")
+@user_passes_test(is_admin, login_url="dashboard")
+def add_employee(request):
+    if request.method == "POST":
+        emp_id = request.POST.get("emp_id")
+        emp_name = request.POST.get("emp_name")
+        surname = request.POST.get("surname")
+        tel = request.POST.get("tel")
+        position = request.POST.get("position")
+        password = request.POST.get("password") # ໃນລະບົບຈິງຄວນ Hash Password ກ່ອນ
+
+        if Employee.objects.filter(emp_id=emp_id).exists():
+            messages.error(request, "ລະຫັດພະນັກງານນີ້ມີໃນລະບົບແລ້ວ!")
+            return redirect("add_employee")
+
+        Employee.objects.create(
+            emp_id=emp_id,
+            emp_name=emp_name,
+            surname=surname,
+            tel=tel,
+            position=position,
+            password=password
+        )
+        messages.success(request, f"ເພີ່ມພະນັກງານ {emp_name} ສຳເລັດ!")
+        return redirect("employee_list")
+
+    return render(request, "store/add_employee.html")
+
+@login_required(login_url="login")
+@user_passes_test(is_admin, login_url="dashboard")
+def delete_employee(request, emp_id):
+    emp = get_object_or_404(Employee, emp_id=emp_id)
+    emp.delete()
+    messages.success(request, "ລຶບຂໍ້ມູນພະນັກງານສຳເລັດ!")
+    return redirect("employee_list")
+
+@login_required(login_url="login")
+def category_list(request):
+    categories = Category.objects.all()
+    if request.method == "POST":
+        cat_id = request.POST.get("cat_id")
+        cat_name = request.POST.get("cat_name")
+        Category.objects.create(cat_id=cat_id, cat_name=cat_name)
+        messages.success(request, "ເພີ່ມໝວດໝູ່ສຳເລັດ!")
+        return redirect("category_list")
+    return render(request, "store/category_list.html", {"categories": categories})
+
+@login_required(login_url="login")
+def brand_list(request):
+    brands = Brand.objects.all()
+    if request.method == "POST":
+        brand_id = request.POST.get("brand_id")
+        brand_name = request.POST.get("brand_name")
+        Brand.objects.create(brand_id=brand_id, brand_name=brand_name)
+        messages.success(request, "ເພີ່ມຍີ່ຫໍ້ສຳເລັດ!")
+        return redirect("brand_list")
+    return render(request, "store/brand_list.html", {"brands": brands})
+
+@login_required(login_url="login")
+def unit_list(request):
+    units = Unit.objects.all()
+    if request.method == "POST":
+        unit_id = request.POST.get("unit_id")
+        unit_name = request.POST.get("unit_name")
+        Unit.objects.create(unit_id=unit_id, unit_name=unit_name)
+        messages.success(request, "ເພີ່ມຫົວໜ່ວຍສຳເລັດ!")
+        return redirect("unit_list")
+    return render(request, "store/unit_list.html", {"units": units})
+
+def delete_category(request, pk):
+    get_object_or_404(Category, pk=pk).delete()
+    return redirect('category_list')
+
+def delete_brand(request, pk):
+    get_object_or_404(Brand, pk=pk).delete()
+    return redirect('brand_list')
+
+def delete_unit(request, pk):
+    get_object_or_404(Unit, pk=pk).delete()
+    return redirect('unit_list')
+
+# ແກ້ໄຂຜູ້ສະໜອງ
+def edit_supplier(request, pk):
+    instance = get_object_or_404(Supplier, pk=pk)
+    if request.method == "POST":
+        instance.company_name = request.POST.get("sup_name")
+        instance.tel = request.POST.get("tel")
+        instance.address = request.POST.get("address")
+        instance.save()
+        messages.success(request, "ແກ້ໄຂຜູ້ສະໜອງສຳເລັດ!")
+    return redirect('supplier_list')
+
+# --- Edit Category ---
+def edit_category(request, pk):
+    instance = get_object_or_404(Category, pk=pk)
+    if request.method == "POST":
+        instance.cat_name = request.POST.get("cat_name")
+        instance.save()
+        messages.success(request, "ແກ້ໄຂໝວດໝູ່ສຳເລັດ!")
+    return redirect('category_list')
+
+# --- Edit Brand ---
+def edit_brand(request, pk):
+    instance = get_object_or_404(Brand, pk=pk)
+    if request.method == "POST":
+        instance.brand_name = request.POST.get("brand_name")
+        instance.save()
+        messages.success(request, "ແກ້ໄຂຍີ່ຫໍ້ສຳເລັດ!")
+    return redirect('brand_list')
+
+# --- Edit Unit ---
+def edit_unit(request, pk):
+    instance = get_object_or_404(Unit, pk=pk)
+    if request.method == "POST":
+        instance.unit_name = request.POST.get("unit_name")
+        instance.save()
+        messages.success(request, "ແກ້ໄຂຫົວໜ່ວຍສຳເລັດ!")
+    return redirect('unit_list')
+
+@login_required(login_url="login")
+def supplier_list(request):
+    suppliers = Supplier.objects.all().order_by('sup_id')
+    if request.method == "POST":
+        sup_id = request.POST.get("sup_id")
+        sup_name = request.POST.get("sup_name")
+        tel = request.POST.get("tel")
+        address = request.POST.get("address")
+        
+        Supplier.objects.create(
+            sup_id=sup_id,
+            company_name=sup_name,
+            tel=tel,
+            address=address
+        )
+        messages.success(request, "ເພີ່ມຂໍ້ມູນຜູ້ສະໜອງສຳເລັດ!")
+        return redirect("supplier_list")
+    return render(request, "store/supplier_list.html", {"suppliers": suppliers})
+
+def delete_supplier(request, pk):
+    get_object_or_404(Supplier, pk=pk).delete()
+    return redirect('supplier_list')
+
+@login_required(login_url="login")
+@user_passes_test(is_admin, login_url="dashboard")
+def all_reports(request):
+    today = timezone.now().date()
+    
+    # 1. ຮັບຄ່າ Filter ຈາກ Request
+    report_type = request.GET.get('type', 'sales')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    selected_month = request.GET.get('month')
+    search_query = request.GET.get("search", "")
+
+    # 2. ສ້າງລາຍຊື່ເດືອນຍ້ອນຫຼັງ 6 ເດືອນ (ສຳລັບ Dropdown ທາງລັດ)
+    month_options = []
+    for i in range(6):
+        # ໃຊ້ timedelta ຖອຍຫຼັງເທື່ອລະ 30 ວັນເພື່ອຫາເດືອນກ່ອນໆ
+        d = (today.replace(day=1) - timezone.timedelta(days=i*28)).replace(day=1)
+        month_options.append({'val': d.strftime('%Y-%m'), 'lab': d.strftime('%m/%Y')})
+
+    # 3. ກຽມ Context ເບື້ອງຕົ້ນ
+    context = {
+        'report_type': report_type,
+        'month_options': month_options,
+        'selected_month': selected_month,
+        'start_date': start_date,
+        'end_date': end_date,
+        'search_query': search_query,
+    }
+
+    # --- 5.2 ລາຍງານການຂາຍ (Sales) ---
+    if report_type == 'sales':
+        sales = Sale.objects.all().order_by("-sale_date")
+        
+        # Logic ການກັ່ນຕອງ: ເລືອກເດືອນ > ກອກວັນທີ > ເດືອນປັດຈຸບັນ
+        if selected_month:
+            year, month = map(int, selected_month.split('-'))
+            sales = sales.filter(sale_date__year=year, sale_date__month=month)
+        elif start_date and end_date:
+            sales = sales.filter(sale_date__date__range=[start_date, end_date])
+        elif not search_query:
+            # ຖ້າບໍ່ໄດ້ Search ແລະ ບໍ່ໄດ້ Filter ໃຫ້ໂຊເດືອນປັດຈຸບັນ
+            sales = sales.filter(sale_date__year=today.year, sale_date__month=today.month)
+        
+        if search_query:
+            sales = sales.filter(Q(sale_id__icontains=search_query) | Q(cus__cus_name__icontains=search_query))
+            
+        context['sales'] = sales
+        context['total_revenue'] = sales.aggregate(Sum("total_amount"))["total_amount__sum"] or 0
+        context['total_bills'] = sales.count()
+
+    # --- 5.1 ລາຍງານຂໍ້ມູນພື້ນຖານ ---
+    elif report_type == 'basic':
+        context['products'] = Product.objects.all()
+        context['suppliers'] = Supplier.objects.all()
+        context['customers'] = Customer.objects.all()
+
+    # --- 5.4 & 5.5 ລາຍງານຄັງສິນຄ້າ ---
+    elif report_type == 'inventory':
+        context['inventory'] = Product.objects.all().order_by('qty')
+        context['low_stock_count'] = Product.objects.filter(qty__lt=5).count()
+
+# --- 5.8 ລາຍງານການເຄມ (Claims) ---
+    elif report_type == 'claims':
+        claims = Claim.objects.all().order_by("-claim_date")
+        
+        if selected_month:
+            year, month = map(int, selected_month.split('-'))
+            claims = claims.filter(claim_date__year=year, claim_date__month=month)
+        elif start_date and end_date:
+            claims = claims.filter(claim_date__date__range=[start_date, end_date])
+        
+        context['claims'] = claims
+    return render(request, "store/all_reports.html", context)

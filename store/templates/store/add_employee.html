@@ -1,0 +1,68 @@
+{% extends 'store/base.html' %}
+
+{% block title %}ເພີ່ມພະນັກງານ - Procom POS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 p-4" style="border-radius: 20px;">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'employee_list' %}" class="btn btn-light rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h4 class="fw-bold text-dark mb-0">ເພີ່ມພະນັກງານໃໝ່</h4>
+            </div>
+
+            <form method="POST" action="{% url 'add_employee' %}">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold small text-muted">ລະຫັດພະນັກງານ (Employee ID)</label>
+                        <input type="text" name="emp_id" class="form-control" placeholder="ຕົວຢ່າງ: EMP003" required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">ຊື່ພະນັກງານ</label>
+                        <input type="text" name="emp_name" class="form-control" placeholder="ປ້ອນຊື່..." required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">ນາມສະກຸນ</label>
+                        <input type="text" name="surname" class="form-control" placeholder="ປ້ອນນາມສະກຸນ..." required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">ເບີໂທລະສັບ</label>
+                        <input type="text" name="tel" class="form-control" placeholder="020 XXX XXX XX" required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">ຕຳແໜ່ງ</label>
+                        <select name="position" class="form-select" required>
+                            <option value="Staff">ພະນັກງານຂາຍ (Staff)</option>
+                            <option value="Stock">ພະນັກງານຄັງ (Stock)</option>
+                            <option value="Manager">ຜູ້ຈັດການ (Manager)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-12 mb-4">
+                        <label class="form-label fw-bold small text-muted">ລະຫັດຜ່ານ (Password)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-key-fill text-muted"></i></span>
+                            <input type="password" name="password" class="form-control" placeholder="ກຳນົດລະຫັດຜ່ານ..." required>
+                        </div>
+                        <small class="text-muted" style="font-size: 0.75rem;">* ລະຫັດນີ້ຈະໃຊ້ສຳລັບການ Login ເຂົ້າລະບົບ</small>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary py-2 fw-bold" style="background-color: #4318ff; border: none; border-radius: 12px;">
+                        <i class="bi bi-check-circle-fill me-2"></i> ບັນທຶກຂໍ້ມູນພະນັກງານ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
