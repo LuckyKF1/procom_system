@@ -174,7 +174,7 @@ class Shipping(models.Model):
 
 # D14: ຕາຕະລາງການເຄມສິນຄ້າ
 class Claim(models.Model):
-    claim_id = models.CharField(max_length=10, primary_key=True)
+    claim_id = models.CharField(max_length=20, primary_key=True)
     claim_date = models.DateTimeField(auto_now_add=True)
     sale_detail = models.ForeignKey(SaleDetail, on_delete=models.CASCADE)
     emp = models.ForeignKey(Employee, on_delete=models.CASCADE, db_column='emp_id')
