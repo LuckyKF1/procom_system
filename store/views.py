@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from django.contrib import messages
 from .forms import EmployeeForm
-from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, generate_sale_id
+from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, Claim, generate_sale_id
 
 @login_required(login_url="login")
 def shop_settings(request):
@@ -438,9 +438,6 @@ def add_claim(request):
             messages.error(request, f"ເກີດຂໍ້ຜິດພາດ: {str(e)}")
             return redirect("add_claim")
 
-    # --- ສ່ວນສະແດງໜ້າຟອມ (GET Request) ---
-    # ດຶງສະເພາະລາຍການທີ່ "ຍັງບໍ່ໝົດປະກັນ" ມາໃຫ້ເລືອກ (ເພື່ອຄວາມສະດວກຂອງ User)
-    from .models import SaleDetail
     today = timezone.now().date()
     
     # ດຶງສິນຄ້າທີ່ຂາຍແລ້ວ ແລະ ວັນທີໝົດປະກັນ ຍັງຫຼາຍກວ່າ ຫຼື ເທົ່າກັບ ມື້ນີ້
