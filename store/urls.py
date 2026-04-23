@@ -42,4 +42,7 @@ urlpatterns = [
     path('customers/edit/<str:cus_id>/', views.edit_customer, name='edit_customer'),
     path('customers/delete/<str:cus_id>/', views.delete_customer, name='delete_customer'),
     path('sale/<str:pk>/', views.sale_detail, name='sale_detail'),
+    path('sale/add-shipping/<str:sale_id>/', views.add_shipping, name='add_shipping'),
+    path('sale/add-shipping/<str:sale_id>/', views.add_shipping, name='add_shipping'),
+    path('sale/update-status/<str:sale_id>/<str:new_status>/', views.update_sale_status, name='update_sale_status'),
 ]

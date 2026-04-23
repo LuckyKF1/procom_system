@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from django.contrib import messages
 from .forms import EmployeeForm
-from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, generate_sale_id
+from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, generate_sale_id
 
 @login_required(login_url="login")
 def shop_settings(request):
@@ -917,3 +917,37 @@ def sale_detail(request, pk):
         'shop': ShopInfo.objects.first(),
     }
     return render(request, 'store/sale_detail.html', context)
+
+def add_shipping(request, sale_id):
+    if request.method == "POST":
+        sale_obj = get_object_or_404(Sale, sale_id=sale_id)
+        
+        Shipping.objects.update_or_create(
+            sale=sale_obj,
+            defaults={
+                'tracking_no': request.POST.get('tracking_no'),
+                'status': 'Shipped'
+            }
+        )
+        
+        return redirect('sale_detail', pk=sale_id)
+    
+def update_sale_status(request, sale_id, new_status):
+    sale = get_object_or_404(Sale, sale_id=sale_id)
+    
+    if new_status == 'Paid':
+        sale.status = 'Paid'
+        sale.save()
+    elif new_status == 'Cancelled':
+        # ຄືນສະຕັອກກ່ອນຍົກເລີກ
+        from .models import SaleDetail
+        details = SaleDetail.objects.filter(sale=sale)
+        for item in details:
+            product = item.pro
+            product.qty += item.qty
+            product.save()
+        sale.status = 'Unpaid'
+        sale.save()
+        
+    # Redirect ກັບໄປໜ້າ Detail ໂດຍໃຊ້ pk (ຕາມທີ່ເຮົາແກ້ກັນມື້ກີ້)
+    return redirect('sale_detail', pk=sale_id)
