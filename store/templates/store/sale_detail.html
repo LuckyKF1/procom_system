@@ -40,14 +40,14 @@
                 {% if sale.status == 'Unpaid' or sale.status == 'Quotation' %}
                 <div class="d-grid gap-2">
                     <a href="{% url 'update_sale_status' sale.sale_id 'Paid' %}" 
-                       class="btn btn-success btn-sm rounded-3" 
-                       onclick="return confirm('ຢືນຢັນການຮັບເງິນ?')">
-                       <i class="bi bi-check-circle me-1"></i> ຊຳລະເງິນແລ້ວ
+                    class="btn btn-success btn-sm rounded-3" 
+                    onclick="return confirm('ຢືນຢັນການຮັບເງິນ?')">
+                    <i class="bi bi-check-circle me-1"></i> ຊຳລະເງິນແລ້ວ
                     </a>
                     <a href="{% url 'update_sale_status' sale.sale_id 'Cancelled' %}" 
-                       class="btn btn-outline-danger btn-sm rounded-3"
-                       onclick="return confirm('ຢືນຢັນການຍົກເລີກບິນ ແລະ ຄືນສະຕັອກ?')">
-                       <i class="bi bi-x-circle me-1"></i> ຍົກເລີກບິນນີ້
+                    class="btn btn-outline-danger btn-sm rounded-3"
+                    onclick="return confirm('ຢືນຢັນການຍົກເລີກບິນ ແລະ ຄືນສະຕັອກ?')">
+                    <i class="bi bi-x-circle me-1"></i> ຍົກເລີກບິນນີ້
                     </a>
                 </div>
                 {% endif %}

@@ -158,7 +158,7 @@ class Shipping(models.Model):
     tracking_no = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(max_length=30, default='Pending')
 
-    class Meta: 
+    class Meta:
         db_table = 'tb_shippings'
 
     def save(self, *args, **kwargs):
