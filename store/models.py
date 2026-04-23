@@ -158,7 +158,19 @@ class Shipping(models.Model):
     tracking_no = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(max_length=30, default='Pending')
 
-    class Meta: db_table = 'tb_shippings'
+    class Meta: 
+        db_table = 'tb_shippings'
+
+    def save(self, *args, **kwargs):
+        if not self.ship_id:
+            # Logic: ດຶງ ID ຫຼ້າສຸດມາແລ້ວບວກ 1
+            last_ship = Shipping.objects.all().order_by('ship_id').last()
+            if last_ship:
+                last_id = int(last_ship.ship_id[2:]) # ຕັດ SH ອອກແລ້ວແປງເປັນຕົວເລກ
+                self.ship_id = 'SH' + str(last_id + 1).zfill(5)
+            else:
+                self.ship_id = 'SH00001'
+        super(Shipping, self).save(*args, **kwargs)
 
 # D14: ຕາຕະລາງການເຄມສິນຄ້າ
 class Claim(models.Model):

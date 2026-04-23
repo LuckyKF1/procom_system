@@ -24,11 +24,62 @@
                 <hr>
                 <p class="mb-1 text-muted small">ພະນັກງານຂາຍ:</p>
                 <p class="fw-bold">{{ sale.emp.emp_name }}</p>
+                
+                <hr>
+                <p class="mb-1 text-muted small">ສະຖານະປະຈຸບັນ:</p>
+                <div class="mb-3">
+                    {% if sale.status == 'Paid' %}
+                        <span class="badge bg-success rounded-pill px-3">ຊຳລະແລ້ວ</span>
+                    {% elif sale.status == 'Unpaid' or sale.status == 'Quotation' %}
+                        <span class="badge bg-warning text-dark rounded-pill px-3">ຄ້າງຊຳລະ / ໃບສະເໜີລາຄາ</span>
+                    {% else %}
+                        <span class="badge bg-secondary rounded-pill px-3">{{ sale.status }}</span>
+                    {% endif %}
+                </div>
+
+                {% if sale.status == 'Unpaid' or sale.status == 'Quotation' %}
+                <div class="d-grid gap-2">
+                    <a href="{% url 'update_sale_status' sale.sale_id 'Paid' %}" 
+                       class="btn btn-success btn-sm rounded-3" 
+                       onclick="return confirm('ຢືນຢັນການຮັບເງິນ?')">
+                       <i class="bi bi-check-circle me-1"></i> ຊຳລະເງິນແລ້ວ
+                    </a>
+                    <a href="{% url 'update_sale_status' sale.sale_id 'Cancelled' %}" 
+                       class="btn btn-outline-danger btn-sm rounded-3"
+                       onclick="return confirm('ຢືນຢັນການຍົກເລີກບິນ ແລະ ຄືນສະຕັອກ?')">
+                       <i class="bi bi-x-circle me-1"></i> ຍົກເລີກບິນນີ້
+                    </a>
+                </div>
+                {% endif %}
+            </div> {% if sale.status == 'Paid' %}
+            <div class="card border-0 shadow-sm rounded-4 p-4 mt-3 bg-light">
+                <h6 class="fw-bold mb-3"><i class="bi bi-truck me-2"></i> ການຈັດສົ່ງ (Shipping)</h6>
+                
+                {% if not sale.shipping %}
+                    <form action="{% url 'add_shipping' sale.sale_id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">ເລກ Tracking (HAL / Anousith):</label>
+                            <input type="text" name="tracking_no" class="form-control form-control-sm" placeholder="ກອກເລກບິນຂົນສົ່ງ" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill">
+                            <i class="bi bi-save me-1"></i> ຢືນຢັນການສົ່ງ
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="p-2 border-start border-4 border-primary bg-white rounded">
+                        <p class="mb-1 small"><b>ລະຫັດການສົ່ງ:</b> {{ sale.shipping.ship_id }}</p>
+                        <p class="mb-1 small"><b>ເລກ Tracking:</b> <span class="text-primary fw-bold">{{ sale.shipping.tracking_no }}</span></p>
+                        <p class="mb-1 small"><b>ສະຖານະ:</b> <span class="badge bg-info text-dark">{{ sale.shipping.status }}</span></p>
+                        <p class="mb-0 small text-muted" style="font-size: 0.7rem;">ວັນທີສົ່ງ: {{ sale.shipping.ship_date|date:"d/m/Y H:i" }}</p>
+                    </div>
+                {% endif %}
             </div>
+            {% endif %}
         </div>
 
         <div class="col-md-8">
-            <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
                 <h5 class="fw-bold mb-3">ລາຍການສິນຄ້າ</h5>
                 <div class="table-responsive">
                     <table class="table align-middle">
@@ -46,7 +97,7 @@
                                 <td>
                                     {{ item.pro.pro_name }}
                                     {% if item.warranty_end %}
-                                    <br><small class="text-info">ປະກັນໝົດ: {{ item.warranty_end|date:"d/m/Y" }}</small>
+                                    <br><small class="text-info small" style="font-size: 0.7rem;">ປະກັນໝົດ: {{ item.warranty_end|date:"d/m/Y" }}</small>
                                     {% endif %}
                                 </td>
                                 <td class="text-center">{{ item.qty }}</td>
@@ -72,9 +123,9 @@
                     </table>
                 </div>
                 
-                <div class="text-end mt-3">
-                    <a href="{% url 'receipt' sale.sale_id %}" target="_blank" class="btn btn-primary">
-                        <i class="bi bi-printer"></i>
+                <div class="text-end mt-4">
+                    <a href="{% url 'receipt' sale.sale_id %}" target="_blank" class="btn btn-primary px-4 rounded-pill">
+                        <i class="bi bi-printer me-2"></i>
                         {% if sale.status == 'Quotation' %} ພິມໃບສະເໜີລາຄາ {% else %} ພິມໃບຮັບເງິນ {% endif %}
                     </a>
                 </div>

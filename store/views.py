@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from django.contrib import messages
 from .forms import EmployeeForm
-from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, generate_sale_id
+from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, Shipping, generate_sale_id
 
 @login_required(login_url="login")
 def shop_settings(request):
@@ -917,3 +917,41 @@ def sale_detail(request, pk):
         'shop': ShopInfo.objects.first(),
     }
     return render(request, 'store/sale_detail.html', context)
+
+def update_sale_status(request, sale_id, new_status):
+    sale = get_object_or_404(Sale, sale_id=sale_id)
+    
+    if new_status == 'Paid':
+        sale.status = 'Paid'
+        sale.save()
+        messages.success(request, f"ບິນ {sale_id} ຊຳລະເງິນສຳເລັດແລ້ວ!")
+        
+    elif new_status == 'Cancelled':
+        # Logic: ຄືນສິນຄ້າເຂົ້າ Stock ເມື່ອຍົກເລີກການຂາຍ
+        sale_items = SaleDetail.objects.filter(sale=sale)
+        for item in sale_items:
+            product = item.pro
+            product.qty += item.qty  # ບວກຈຳນວນຄືນເຂົ້າສາງ
+            product.save()
+        
+        # ປ່ຽນສະຖານະ ຫຼື ລຶບ (ໃນທີ່ນີ້ແນະນຳໃຫ້ປ່ຽນສະຖານະເພື່ອເກັບປະຫວັດ)
+        sale.status = 'Unpaid' # ຫຼື ຖ້າ Lucky ມີ choice 'Cancelled' ກໍໃຊ້ໂຕນັ້ນ
+        sale.save()
+        messages.warning(request, f"ຍົກເລີກບິນ {sale_id} ແລະ ຄືນສິນຄ້າເຂົ້າສາງແລ້ວ.")
+
+    # ກັບໄປໜ້າລາຍງານ ຫຼື ໜ້າທີ່ສົ່ງມາ
+    return redirect('all_reports')
+
+def add_shipping(request, sale_id):
+    if request.method == "POST":
+        sale_obj = get_object_or_404(Sale, sale_id=sale_id)
+        
+        Shipping.objects.update_or_create(
+            sale=sale_obj,
+            defaults={
+                'tracking_no': request.POST.get('tracking_no'),
+                'status': 'Shipped'
+            }
+        )
+        
+        return redirect('sale_detail', pk=sale_id)
