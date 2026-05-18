@@ -22,101 +22,92 @@
             </div>
             </form>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn" style="background-color: #f4f7fe; color: #2b3674; font-weight: 600;">
-                <i class="bi bi-funnel"></i> Filter
-            </button>
+        <div class="d-flex gap-2 align-items-center">
+            <form method="GET" action="" class="d-flex align-items-center">
+                <input type="hidden" name="search" value="{{ search_query }}" />
+                <select name="category" class="form-select" style="border: 1px solid #e2e8f0; background-color: #f4f7fe;" onchange="this.form.submit()">
+                    <option value="">ທັງໝົດ</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.cat_id }}" {% if cat.cat_id|stringformat:"s" == request.GET.category %}selected{% endif %}>{{ cat.cat_name }}</option>
+                    {% endfor %}
+                </select>
+                {% comment %} <button type="submit" class="btn" style="background-color: #f4f7fe; color: #2b3674; font-weight: 600; margin-left: 4px;">
+                    <i class="bi bi-funnel"></i> Filter
+                </button> {% endcomment %}
+            </form>
             <button class="btn" style="background-color: #f4f7fe; color: #2b3674; font-weight: 600;">
                 <i class="bi bi-download"></i> Export
             </button>
         </div>
     </div>
 
-    <div class="card p-4">
-        <div class="table-responsive">
-            <table class="table table-borderless align-middle mb-0">
-                <thead style="border-bottom: 2px solid #f4f7fe;">
-                    <tr>
-                        <th class="text-muted fw-bold pb-3" style="width: 80px;">ຮູບພາບ</th>
-                        <th class="text-muted fw-bold pb-3">ລະຫັດ / ຊື່ສິນຄ້າ</th>
-                        <th class="text-muted fw-bold pb-3">ໝວດໝູ່ / ຍີ່ຫໍ້</th>
-                        <th class="text-muted fw-bold pb-3 text-end">ລາຄາຕົ້ນທຶນ</th>
-                        <th class="text-muted fw-bold pb-3 text-end">ລາຄາຂາຍ</th>
-                        <th class="text-muted fw-bold pb-3 text-center">ຈຳນວນ (ສະຕັອກ)</th>
-                        <th class="text-muted fw-bold pb-3 text-center">ຈັດການ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in products %}
-                    <tr style="border-bottom: 1px solid #f4f7fe; transition: all 0.2s;" class="table-row-hover">
-                        <td class="py-3">
-                            {% if p.pro_img %}
-                                <img src="{{ p.pro_img.url }}" alt="{{ p.pro_name }}" class="shadow-sm" style="width: 50px; height: 50px; object-fit: cover; border-radius: 12px;">
-                            {% else %}
-                                <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px; background-color: #f4f7fe; border-radius: 12px; color: #a3aed1;">
-                                    <i class="bi bi-image fs-4"></i>
+    <div class="row gx-2">
+        {% for box in boxes %}
+        <div class="col-md-12 mb-4">
+            <div class="card p-5 h-100">
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0">
+                        <thead style="border-bottom: 2px solid #f4f7fe;">
+                            <tr>
+                                <th class="text-muted fw-bold pb-3" style="width: 80px;">ຮູບພາບ</th>
+                                <th class="text-muted fw-bold pb-3">ລະຫັດ / ຊື່ສິນຄ້າ</th>
+                                <th class="text-muted fw-bold pb-3">ໝວດໝູ່ / ຍີ່ຫໍ້</th>
+                                <th class="text-muted fw-bold pb-3 text-end">ລາຄາຕົ້ນທຶນ</th>
+                                <th class="text-muted fw-bold pb-3 text-end">ລາຄາຂາຍ</th>
+                                <th class="text-muted fw-bold pb-3 text-center">ຈຳນວນ (ສະຕັອກ)</th>
+                                <th class="text-muted fw-bold pb-3 text-center">ຈັດການ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for category, items in box.items %}
+                        <tr class="table-primary">
+                            <td colspan="7" class="fw-bold text-primary" style="background-color:#e9f5ff;">{{ category.cat_name }}</td>
+                        </tr>
+                        {% for p in items %}
+                        <tr style="border-bottom: 1px solid #f4f7fe; transition: all 0.2s;" class="table-row-hover">
+                            <td class="py-3">
+                                {% if p.pro_img %}
+                                    <img src="{{ p.pro_img.url }}" alt="{{ p.pro_name }}" class="shadow-sm" style="width: 50px; height: 50px; object-fit: cover; border-radius: 12px;">
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px; background-color: #f4f7fe; border-radius: 12px; color: #a3aed1;">
+                                        <i class="bi bi-image fs-4"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                <div class="fw-bold" style="color: #2b3674; font-size: 1.05rem;">{{ p.pro_name }}</div>
+                                <small class="fw-medium" style="color: #a3aed1;">{{ p.pro_id }}</small>
+                            </td>
+                            <td class="py-3">
+                                <div class="fw-medium text-secondary">{{ p.cat.cat_name }}</div>
+                                <small style="color: #a3aed1;"><i class="bi bi-tag-fill me-1"></i>{{ p.brand.brand_name }}</small>
+                            </td>
+                            <td class="py-3 text-end fw-medium text-muted">{{ p.price_buy|floatformat:"0g" }}</td>
+                            <td class="py-3 text-end fw-bold" style="color: #4318ff;">{{ p.price_sale|floatformat:"0g" }} ກີບ</td>
+                            <td class="py-3 text-center">
+                                {% if p.qty > 10 %}
+                                    <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(5, 205, 153, 0.1); color: #05cd99;">{{ p.qty }} {{ p.unit.unit_name }}</span>
+                                {% elif p.qty > 0 %}
+                                    <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(255, 181, 71, 0.1); color: #ffb547;">ໃກ້ໝົດ ({{ p.qty }})</span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(238, 93, 80, 0.1); color: #ee5d50;">ສິນຄ້າໝົດ</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{% url 'edit_product' p.pro_id %}" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(67, 24, 255, 0.1); color: #4318ff; border-radius: 10px;" title="ແກ້ໄຂ"><i class="bi bi-pencil-fill"></i></a>
+                                    <a href="{% url 'delete_product' p.pro_id %}" onclick="return confirm('ທ່ານຕ້ອງການລຶບສິນຄ້າ {{ p.pro_name }} ແທ້ຫຼືບໍ່?');" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(238, 93, 80, 0.1); color: #ee5d50; border-radius: 10px;" title="ລຶບ"><i class="bi bi-trash3-fill"></i></a>
                                 </div>
-                            {% endif %}
-                        </td>
-                        
-                        <td class="py-3">
-                            <div class="fw-bold" style="color: #2b3674; font-size: 1.05rem;">{{ p.pro_name }}</div>
-                            <small class="fw-medium" style="color: #a3aed1;">{{ p.pro_id }}</small>
-                        </td>
-
-                        <td class="py-3">
-                            <div class="fw-medium text-secondary">{{ p.cat.cat_name }}</div>
-                            <small style="color: #a3aed1;"><i class="bi bi-tag-fill me-1"></i>{{ p.brand.brand_name }}</small>
-                        </td>
-
-                        <td class="py-3 text-end fw-medium text-muted">
-                            {{ p.price_buy|floatformat:"0g" }}
-                        </td>
-
-                        <td class="py-3 text-end fw-bold" style="color: #4318ff;">
-                            {{ p.price_sale|floatformat:"0g" }} ກີບ
-                        </td>
-
-                        <td class="py-3 text-center">
-                            {% if p.qty > 10 %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(5, 205, 153, 0.1); color: #05cd99;">
-                                    {{ p.qty }} {{ p.unit.unit_name }}
-                                </span>
-                            {% elif p.qty > 0 %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(255, 181, 71, 0.1); color: #ffb547;">
-                                    ໃກ້ໝົດ ({{ p.qty }})
-                                </span>
-                            {% else %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background-color: rgba(238, 93, 80, 0.1); color: #ee5d50;">
-                                    ສິນຄ້າໝົດ
-                                </span>
-                            {% endif %}
-                        </td>
-
-                        <td class="py-3 text-center">
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="{% url 'edit_product' p.pro_id %}" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(67, 24, 255, 0.1); color: #4318ff; border-radius: 10px;" title="ແກ້ໄຂ">
-                                    <i class="bi bi-pencil-fill"></i>
-                                </a>
-                                <a href="{% url 'delete_product' p.pro_id %}" onclick="return confirm('ທ່ານຕ້ອງການລຶບສິນຄ້າ {{ p.pro_name }} ແທ້ຫຼືບໍ່?');" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(238, 93, 80, 0.1); color: #ee5d50; border-radius: 10px;" title="ລຶບ">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center py-5">
-                            <div class="text-muted fw-medium">
-                                <i class="bi bi-box-seam fs-1 d-block mb-3 opacity-50"></i>
-                                ຍັງບໍ່ມີລາຍການສິນຄ້າໃນຄັງ
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+        {% endfor %}
     </div>
 
 </div>

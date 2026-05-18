@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from django.contrib import messages
 from .forms import EmployeeForm
+from .models import Category
 from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, Claim, generate_sale_id
 
 @login_required(login_url="login")
@@ -129,22 +130,44 @@ def dashboard(request):
 @login_required(login_url="login")
 def product_list(request):
     search_query = request.GET.get("search", "")
-    # ດຶງຂໍ້ມູນສິນຄ້າທັງໝົດອອກມາກ່ອນ
-    products = Product.objects.all().order_by("-pro_id")
+    # Fetch categories for grouping
+    categories = Category.objects.all().order_by("cat_name")
+    # Base queryset of products
+    products_qs = Product.objects.select_related('cat', 'brand', 'unit').all().order_by("cat__cat_name", "-pro_id")
+
+    # Category filter
+    selected_category = request.GET.get('category')
+    if selected_category:
+        products_qs = products_qs.filter(cat__cat_id=selected_category)
 
     if search_query:
-        # Filter ຫາ ຊື່, ລະຫັດ, ຊື່ໝວດໝູ່ ຫຼື ຊື່ຍີ່ຫໍ້
-        products = products.filter(
+        # Filter across product fields and related category/brand
+        products_qs = products_qs.filter(
             Q(pro_name__icontains=search_query)
             | Q(pro_id__icontains=search_query)
             | Q(cat__cat_name__icontains=search_query)
             | Q(brand__brand_name__icontains=search_query)
         ).distinct()
 
+    # Group products by category
+    grouped = {}
+    for cat in categories:
+        grouped[cat] = []
+    for p in products_qs:
+        grouped[p.cat].append(p)
+
+    # Split categories into 3 boxes (approximately equal count)
+    category_items = list(grouped.items())
+    total = len(category_items)
+    per_box = (total + 2) // 3  # ceil division for 3 boxes
+    boxes = [category_items[i:i + per_box] for i in range(0, total, per_box)]
+    # Convert each box back to dict for template iteration
+    boxes_dicts = [{cat: items for cat, items in box} for box in boxes]
+
     return render(
         request,
         "store/product_list.html",
-        {"products": products, "search_query": search_query},
+        {"grouped_products": grouped, "boxes": boxes_dicts, "categories": categories, "search_query": search_query},
     )
 
 # POS Page (ຈັດການທັງສະແດງສິນຄ້າ ແລະ ຄິດໄລ່ເງິນລວມ)
@@ -537,13 +560,12 @@ def import_stock(request):
             product.price_buy = price
             product.save()
 
-            messages.success(request, f"ນຳເຂົ້າ {product.pro_name} +{qty} ສຳເລັດ!")
-            return redirect("import_stock")
+            messages.success(request, f"ນຳເຂົ້າ {product.pro_name} +{qty} ສຳເລັດ! ການນຳເຂົ້າສຳເລັດແລ້ວ.")
         else:
             messages.error(request, "ກະລຸນາເລືອກຂໍ້ມູນ ແລະ ປ້ອນຈຳນວນໃຫ້ຄົບຖ້ວນ!")
 
     return render(request, "store/import_stock.html", {
-        "suppliers": suppliers, 
+        "suppliers": suppliers,
         "products": products
     })
 

@@ -3,9 +3,8 @@ from .models import Employee
 
 class EmployeeForm(forms.ModelForm):
     def clean_password(self):
-        from django.contrib.auth.hashers import make_password
         password = self.cleaned_data.get('password')
-        return make_password(password) if password else ''
+        return password if password else ''
     class Meta:
         model = Employee
         fields = ['emp_name', 'surname', 'tel', 'position', 'password']
