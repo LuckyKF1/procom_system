@@ -12,6 +12,12 @@
             </a>
         </div>
 
+<form method="GET" style="margin-bottom:1rem;">
+    <div class="input-group" style="background-color:#f4f7fe; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0;">
+        <span class="input-group-text bg-transparent border-0 text-muted px-3"><i class="bi bi-search"></i></span>
+        <input type="text" name="search" value="{{ request.GET.search|default:'' }}" class="form-control bg-transparent border-0" placeholder="ຄົ້ນຫາ ບິນ / ສິນຄ້າ..." oninput="this.form.submit()">
+    </div>
+</form>
 <form method="POST">
             {% csrf_token %}
             

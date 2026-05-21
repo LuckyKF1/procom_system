@@ -466,7 +466,17 @@ def add_claim(request):
     # ດຶງສິນຄ້າທີ່ຂາຍແລ້ວ ແລະ ວັນທີໝົດປະກັນ ຍັງຫຼາຍກວ່າ ຫຼື ເທົ່າກັບ ມື້ນີ້
     sale_details = SaleDetail.objects.filter(
         Q(warranty_end__gte=today) | Q(warranty_end__isnull=True)
-    ).order_by("-sale__sale_date")
+    )
+    # Apply optional search filter for bills/products
+    search_q = request.GET.get('search', '').strip()
+    if search_q:
+        sale_details = sale_details.filter(
+            Q(pro__pro_name__icontains=search_q) |
+            Q(pro__pro_id__icontains=search_q) |
+            Q(sale__sale_id__icontains=search_q) |
+            Q(sale__cus__cus_name__icontains=search_q)
+        )
+    sale_details = sale_details.order_by("-sale__sale_date")
 
     return render(request, "store/add_claim.html", {"sale_details": sale_details})
 
