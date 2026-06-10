@@ -296,6 +296,9 @@ def checkout(request):
             product = Product.objects.get(pro_id=pid)
             SaleDetail.objects.create(sale=new_sale, pro=product, qty=item["quantity"], price=item["price"])
             if status == "Paid":
+                if product.qty < item["quantity"]:
+                    messages.error(request, f"ຂໍ້ມູນບໍ່ພຽງ! ຈະມີສິນຄ້າ {product.pro_name} ຈຳນວນ {item['quantity']} ພາຍໃນສະຕໍ້ {product.qty}.")
+                    return redirect("pos")
                 product.qty -= item["quantity"]
                 product.save()
 
