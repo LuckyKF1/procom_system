@@ -181,6 +181,92 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* ========================================
+       MOBILE RESPONSIVE STYLES FOR POS
+       ======================================== */
+    @media (max-width: 768px) {
+        /* Full width for product grid on mobile */
+        .col-xl-8, .col-lg-7, .col-xl-4, .col-lg-5 {
+            width: 100%;
+            max-width: 100%;
+            flex: 0 0 100%;
+        }
+        
+        /* Stack the cart section below products on mobile */
+        .row.g-3 {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Product cards - larger on mobile for easier touch */
+        .col-xl-3, .col-md-4, .col-sm-6 {
+            width: 50%;
+            flex: 0 0 50%;
+        }
+        
+        .product-card img {
+            height: 120px !important;
+        }
+        
+        .product-card .card-body button {
+            font-size: 0.75rem !important;
+            padding: 8px 4px !important;
+        }
+        
+        /* Cart section - full width on mobile */
+        .cart-mobile-full {
+            margin-top: 20px;
+        }
+        
+        /* Make cart items easier to tap */
+        .cart-item-mobile {
+            padding: 12px !important;
+        }
+        
+        /* Larger buttons in checkout section */
+        .btn-sm {
+            padding: 12px !important;
+            font-size: 0.9rem !important;
+        }
+        
+        /* Search bar full width on mobile */
+        .input-group input[placeholder*="ຄົ້ນຫາ"] {
+            min-width: 150px !important;
+        }
+        
+        /* Adjust summary section */
+        .mb-3.p-2[style*="background-color: #f8fafc"] {
+            font-size: 0.9rem !important;
+        }
+        
+        /* Form inputs larger on mobile */
+        .form-select, .form-control {
+            font-size: 0.9rem !important;
+            padding: 10px !important;
+        }
+    }
+    
+    /* Extra small devices */
+    @media (max-width: 576px) {
+        /* Single column for products */
+        .col-xl-3, .col-md-4, .col-sm-6 {
+            width: 100%;
+            flex: 0 0 100%;
+        }
+        
+        .product-card img {
+            height: 140px !important;
+        }
+        
+        .navbar-brand {
+            font-size: 1rem !important;
+        }
+        
+        h5.fw-bold {
+            font-size: 1rem !important;
+        }
+    }
 </style>
 
 <script>
