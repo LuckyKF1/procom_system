@@ -35,9 +35,9 @@
                     <i class="bi bi-funnel"></i> Filter
                 </button> {% endcomment %}
             </form>
-            <button class="btn" style="background-color: #f4f7fe; color: #2b3674; font-weight: 600;">
+            {% comment %} <button class="btn" style="background-color: #f4f7fe; color: #2b3674; font-weight: 600;">
                 <i class="bi bi-download"></i> Export
-            </button>
+            </button> {% endcomment %}
         </div>
     </div>
 
@@ -51,7 +51,7 @@
                             <tr>
                                 <th class="text-muted fw-bold pb-3" style="width: 80px;">ຮູບພາບ</th>
                                 <th class="text-muted fw-bold pb-3">ລະຫັດ / ຊື່ສິນຄ້າ</th>
-                                <th class="text-muted fw-bold pb-3">ໝວດໝູ່ / ຍີ່ຫໍ້</th>
+                                <th class="text-muted fw-bold pb-3">ໝວດໝູ່ / ຍີ່ຫໍ້ / ຫົວໜ່ວຍ</th>
                                 <th class="text-muted fw-bold pb-3 text-end">ລາຄາຕົ້ນທຶນ</th>
                                 <th class="text-muted fw-bold pb-3 text-end">ລາຄາຂາຍ</th>
                                 <th class="text-muted fw-bold pb-3 text-center">ຈຳນວນ (ສະຕັອກ)</th>
@@ -61,7 +61,7 @@
                         <tbody>
                         {% for category, items in box.items %}
                         <tr class="table-primary">
-                            <td colspan="7" class="fw-bold text-primary" style="background-color:#e9f5ff;">{{ category.cat_name }}</td>
+                            <td colspan="8" class="fw-bold text-primary" style="background-color:#e9f5ff;">{{ category.cat_name }}</td>
                         </tr>
                         {% for p in items %}
                         <tr style="border-bottom: 1px solid #f4f7fe; transition: all 0.2s;" class="table-row-hover">
@@ -81,6 +81,7 @@
                             <td class="py-3">
                                 <div class="fw-medium text-secondary">{{ p.cat.cat_name }}</div>
                                 <small style="color: #a3aed1;"><i class="bi bi-tag-fill me-1"></i>{{ p.brand.brand_name }}</small>
+                                <small class="d-block" style="color: #a3aed1;"><i class="bi bi-box-seam me-1"></i>{{ p.unit.unit_name }}</small>
                             </td>
                             <td class="py-3 text-end fw-medium text-muted">{{ p.price_buy|floatformat:"0g" }}</td>
                             <td class="py-3 text-end fw-bold" style="color: #4318ff;">{{ p.price_sale|floatformat:"0g" }} ກີບ</td>

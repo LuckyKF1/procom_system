@@ -89,6 +89,29 @@
                 <span>ລວມສຸດທິ:</span>
                 <span>{{ sale.total_amount|floatformat:"0g" }} ກີບ</span>
             </div>
+            <div class="summary-row">
+                <span>ຈ່າຍລວມ:</span>
+                <span>{{ amount_paid|floatformat:"0g" }} ກີບ</span>
+            </div>
+            <div class="summary-row" style="color: #0d6efd;">
+                <span>ຈ່າຍເກີນ:</span>
+                <span>{{ change_due|floatformat:"0g" }} ກີບ</span>
+            </div>
+            <div class="summary-row" style="color: #d9534f;">
+                <span>ຍັງຄ້າງ:</span>
+                <span>{{ balance_due|floatformat:"0g" }} ກີບ</span>
+            </div>
+            {% if payments %}
+            <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; font-size: 13px;">
+                <strong>ຊຳລະເງິນ:</strong><br>
+                {% for payment in payments %}
+                - {{ payment.payment_method }}: {{ payment.amount|floatformat:"0g" }} ກີບ ({{ payment.status }})
+                {% if payment.reference_no %}<br>&nbsp;&nbsp;Ref: {{ payment.reference_no }}{% endif %}
+                {% if payment.bank_name %}<br>&nbsp;&nbsp;Bank: {{ payment.bank_name }}{% endif %}
+                <br>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
 
         <div style="clear: both;"></div>

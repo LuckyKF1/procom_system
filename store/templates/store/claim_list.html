@@ -42,6 +42,7 @@
                         <th class="text-muted fw-bold pb-3">ສິນຄ້າທີ່ເຄມ</th>
                         <th class="text-muted fw-bold pb-3">ອາການເບື້ອງຕົ້ນ</th>
                         <th class="text-muted fw-bold pb-3 text-center">ສະຖານະ</th>
+                        <th class="text-muted fw-bold pb-3">ຂໍ້ມູນສົ່ງ/ຮັບ</th>
                         <th class="text-muted fw-bold pb-3 text-center">ຈັດການ</th>
                     </tr>
                 </thead>
@@ -76,7 +77,11 @@
                                 <span class="badge rounded-pill px-3 py-2 fw-bold bg-light text-dark">{{ c.status }}</span>
                             {% endif %}
                         </td>
-                        
+                        <td class="py-3">
+                            <div class="fw-bold text-secondary" style="font-size:0.95rem;">ຜູ້ສົ່ງອອກ: {{ c.delivered_by|default:'-' }}</div>
+                            <div class="fw-semibold text-secondary" style="font-size:0.85rem;">ນຳເຂົ້າ: {% if c.imported_at %}{{ c.imported_at|date:'d/m/Y H:i' }}{% else %}{{ c.claim_date|date:'d/m/Y H:i' }}{% endif %}</div>
+                            <div class="fw-semibold text-secondary" style="font-size:0.85rem;">ສົ່ງອອກ: {% if c.exported_at %}{{ c.exported_at|date:'d/m/Y H:i' }}{% else %}-{% endif %}</div>
+                        </td>
                         <td class="py-3 text-center">
                             <div class="d-flex justify-content-center">
                                 <a href="{% url 'edit_claim' c.claim_id %}" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(67, 24, 255, 0.1); color: #4318ff; border-radius: 10px;" title="ອັບເດດສະຖານະ/ແກ້ໄຂ">
@@ -87,7 +92,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="8" class="text-center py-5">
                             <div class="text-muted fw-medium mt-3">
                                 <i class="bi bi-tools fs-1 d-block mb-3 opacity-50"></i>
                                 ຍັງບໍ່ມີລາຍການເຄມສິນຄ້າ

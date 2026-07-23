@@ -49,9 +49,29 @@ class Unit(models.Model):
     unit_id = models.CharField(max_length=10, primary_key=True)
     unit_name = models.CharField(max_length=50)
 
-    class Meta: db_table = 'tb_units'
+    class Meta:
+        db_table = 'tb_units'
 
-# D7: ຕາຕະລາງສິນຄ້າ
+# D15: Promotion (discounts)
+class Promotion(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('percent', 'Percentage'),
+        ('fixed', 'Fixed amount'),
+    ]
+    code = models.CharField(max_length=20, unique=True)
+    discount_type = models.CharField(max_length=10, choices=DISCOUNT_TYPE_CHOICES)
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'tb_promotions'
+
+    def __str__(self):
+        return f"{self.code} ({self.get_discount_type_display()}: {self.value})"
+
+# D7: ຕາຕະລະອຽດການສິນຄ້າ
 class Product(models.Model):
     pro_id = models.CharField(max_length=10, primary_key=True)
     pro_name = models.CharField(max_length=100)
@@ -134,11 +154,30 @@ class Sale(models.Model):
     STATUS_CHOICES = [
         ('Quotation', 'ໃບສະເໜີລາຄາ'),
         ('Paid', 'ຊຳລະແລ້ວ'),
+        ('Partial', 'ຊຳລະບາງສ່ວນ'),
         ('Unpaid', 'ຄ້າງຊຳລະ'),
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Paid')
 
     class Meta: db_table = 'tb_sales'
+
+# D11a: ຕາຕະລາງການຊຳລະເງິນ
+class Payment(models.Model):
+    pay_id = models.CharField(max_length=20, primary_key=True)
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, db_column='sale_id')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_method = models.CharField(max_length=30)
+    reference_no = models.CharField(max_length=100, blank=True, null=True)
+    bank_name = models.CharField(max_length=100, blank=True, null=True)
+    payment_date = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='Completed')
+    notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'tb_payments'
+
+    def __str__(self):
+        return self.pay_id
 
 # D12: ຕາຕະລາງລາຍລະອຽດການຂາຍ (ມີ warranty_end ຕາມທີ່ລົມກັນ)
 class SaleDetail(models.Model):
@@ -180,5 +219,9 @@ class Claim(models.Model):
     emp = models.ForeignKey(Employee, on_delete=models.CASCADE, db_column='emp_id')
     symptom = models.TextField()
     status = models.CharField(max_length=30, default='Processing')
+
+    delivered_by = models.CharField(max_length=100, null=True, blank=True)
+    imported_at = models.DateTimeField(null=True, blank=True)
+    exported_at = models.DateTimeField(null=True, blank=True)
 
     class Meta: db_table = 'tb_claims'

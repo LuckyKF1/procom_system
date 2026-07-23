@@ -8,8 +8,7 @@
             {% if report_type == 'sales' %}ລາຍງານການຂາຍ
             {% elif report_type == 'basic' %}ລາຍງານຂໍ້ມູນພື້ນຖານ
             {% elif report_type == 'inventory' %}ລາຍງານຄັງສິນຄ້າ
-            {% elif report_type == 'claims' %}ລາຍງານການເຄມ
-            {% endif %}
+            {% elif report_type == 'claims' %}ລາຍງານການເຄມ            {% elif report_type == 'receipts' %}ລາຍງານບິນ            {% endif %}
         </h3>
         <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="window.print()">
             <i class="bi bi-printer-fill me-2"></i> ພິມລາຍງານ
@@ -32,6 +31,9 @@
                     </a>
                     <a href="?type=claims" class="nav-link mb-2 {% if report_type == 'claims' %}active{% endif %}">
                         <i class="bi bi-tools me-2"></i> ລາຍງານການເຄມ
+                    </a>
+                    <a href="?type=receipts" class="nav-link mb-2 {% if report_type == 'receipts' %}active{% endif %}">
+                        <i class="bi bi-receipt me-2"></i> ລາຍງານບິນ
                     </a>
                 </div>
             </div>
@@ -93,7 +95,7 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr class="text-muted small fw-bold">
-                            <th>ລະຫັດບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th class="text-end">ຍອດລວມ (ກີບ)</th>
+                            <th>ລະຫັດບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th class="text-end">ຍອດລວມ (ກີບ)</th><th class="text-end">ຈັດການ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -103,6 +105,25 @@
                             <td class="text-secondary">{{ s.sale_date|date:"d/m/Y" }}</td>
                             <td>{{ s.cus.cus_name|default:"ລູກຄ້າທົ່ວໄປ" }}</td>
                             <td class="text-end fw-bold">{{ s.total_amount|floatformat:"0g" }}</td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-list me-1"></i> ເລືອກ
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'receipt' s.sale_id %}" target="_blank">
+                                                <i class="bi bi-receipt me-2"></i> ເບິ່ງບິນ
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'sale_detail' s.sale_id %}">
+                                                <i class="bi bi-eye me-2"></i> ເບິ່ງລາຍລະອຽດ
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -190,7 +211,74 @@
                     </tbody>
                 </table>
             </div>
-            {% endif %}
+            {% elif report_type == 'receipts' %}
+            <div class="row g-3 mb-4 d-print-none">
+                <div class="col-md-6">
+                    <div class="card p-4 border-0 shadow-sm d-flex flex-row align-items-center" style="border-radius: 20px;">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 50px; height: 50px; background: rgba(67, 24, 255, 0.1); color: #4318ff;">
+                            <i class="bi bi-cash-stack fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 small fw-bold text-muted">ຍອດບິນລວມ</p>
+                            <h4 class="mb-0 fw-bold">{{ total_receipt_amount|floatformat:"0g" }} ກີບ</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-4 border-0 shadow-sm d-flex flex-row align-items-center" style="border-radius: 20px;">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 50px; height: 50px; background: rgba(5, 205, 153, 0.1); color: #05cd99;">
+                            <i class="bi bi-receipt fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 small fw-bold text-muted">ຈຳນວນບິນທັງໝົດ</p>
+                            <h4 class="mb-0 fw-bold">{{ total_receipt_count }} ບິນ</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 20px;">
+                <h5 class="fw-bold mb-4 text-dark">ລາຍການບິນທັງໝົດ</h5>
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr class="text-muted small fw-bold">
+                            <th>ເລກທີບິນ</th><th>ວັນທີ</th><th>ລູກຄ້າ</th><th>ພະນັກງານ</th><th class="text-end">ຍອດລວມ (ກີບ)</th><th class="text-end">ຈັດການ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in receipts %}
+                        <tr>
+                            <td class="fw-bold text-primary">{{ r.sale_id }}</td>
+                            <td class="text-secondary small">{{ r.sale_date|date:"d/m/Y" }}</td>
+                            <td class="fw-medium">{% if r.cus %}{{ r.cus.cus_name }}{% else %}ລູກຄ້າທົ່ວໄປ{% endif %}</td>
+                            <td class="text-secondary small">{{ r.emp.emp_name }}</td>
+                            <td class="text-end fw-bold">{{ r.total_amount|floatformat:"0g" }}</td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-list me-1"></i> ເລືອກ
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'receipt' r.sale_id %}" target="_blank">
+                                                <i class="bi bi-receipt me-2"></i> ເບິ່ງບິນ
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'sale_detail' r.sale_id %}">
+                                                <i class="bi bi-eye me-2"></i> ເບິ່ງລາຍລະອຽດຫ
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center py-5 text-muted">ຍັງບໍ່ມີຂໍ້ມູນບິນ</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>            {% endif %}
 
         </div>
     </div>

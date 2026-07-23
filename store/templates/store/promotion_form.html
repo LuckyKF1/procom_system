@@ -1,0 +1,12 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container my-4">
+    <h3 class="mb-3">{{ title }}</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">ບັນທຶກ</button>
+        <a href="{% url 'promotion_list' %}" class="btn btn-secondary">ຍົກເລີກ</a>
+    </form>
+</div>
+{% endblock %}

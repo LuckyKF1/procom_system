@@ -1,30 +1,32 @@
+from decimal import Decimal
 from datetime import timedelta, datetime
-from multiprocessing import context
 import random
-from urllib import request
-from django.db import models
 from django.db.models import Q, Sum, F, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .forms import PromotionForm
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime, parse_date
+from django.http import JsonResponse
+from .forms import EmployeeForm, PromotionForm
+from .models import Category, Promotion, Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Brand, Unit, Payment, generate_sale_id
 
 def superuser_passes_test(user):
     return user.is_superuser
 
 # Promotion Management Views
-@user_passes_test(superuser_passes_test)
-
+@login_required(login_url="login")
+@user_passes_test(superuser_passes_test, login_url="dashboard")
 def promotion_add(request):
     if request.method == 'POST':
         form = PromotionForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "กัไิล รกั้รำม ัื้ว")
             return redirect('promotion_list')
     else:
         form = PromotionForm()
+    
     return render(request, 'store/promotion_add.html', {'form': form})
 
 @user_passes_test(superuser_passes_test)
@@ -51,16 +53,6 @@ def promotion_delete(request, code):
     promotion.delete()
     messages.success(request, f'\u0e01\u0e49\u0e40\u0e49 \u0e23\u0e01ั้\u0e23ำ\u0e21 \u0e31\u0e37\u0e49\u0e27 \u0e25\u0e38\u0e32 \u0e01\u0e31\u0e44\u0e34 \u0e07\u0e49 {code}')
     return redirect('promotion_list')
-from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.utils import timezone
-from django.utils.dateparse import parse_datetime, parse_date
-from django.contrib import messages
-from django.http import JsonResponse
-from .forms import EmployeeForm, PromotionForm
-from .models import Category, Promotion
-from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, Claim, generate_sale_id
-
 @login_required(login_url="login")
 def shop_settings(request):
     shop = ShopInfo.objects.first()
@@ -272,7 +264,8 @@ def product_list(request):
 @login_required(login_url="login")
 def pos(request):
     search_query = request.GET.get("search", "")
-    products = Product.objects.filter(qty__gt=0).order_by("pro_name")
+    selected_category = request.GET.get("category", "")
+    products = Product.objects.filter(qty__gt=0).select_related('cat', 'brand', 'unit').order_by("pro_name")
 
     if search_query:
         products = products.filter(
@@ -282,6 +275,10 @@ def pos(request):
             Q(brand__brand_name__icontains=search_query)
         ).distinct()
 
+    if selected_category:
+        products = products.filter(cat__cat_id=selected_category)
+
+    categories = Category.objects.all().order_by("cat_name")
     customers = Customer.objects.all()
     
     # ດຶງຂໍ້ມູນ Cart ມາຄິດໄລ່ຍອດລວມເພື່ອສົ່ງໄປ Dashboard ນ້ອຍໆໃນ POS
@@ -292,10 +289,12 @@ def pos(request):
     context = {
         "products": products,
         "customers": customers,
+        "categories": categories,
         "cart": cart,  # ສົ່ງ cart ໄປໃຫ້ {% if cart %} ໃນ HTML ເຮັດວຽກໄດ້
         "total_price": total_price,
         "total_items": total_items,
         "search_query": search_query,
+        "selected_category": selected_category,
     }
     return render(request, "store/pos.html", context)
 
@@ -330,6 +329,40 @@ def add_to_cart(request, pro_id):
         messages.error(request, f"ຂໍໂທດ! ສິນຄ້າ {product.pro_name} ໃນສະຕັອກບໍ່ພໍ.")
 
     # ກັບໄປໜ້າ POS (ຈະ Redirect ໄປບ່ອນເກົ່າທີ່ກົດ)
+    return redirect("pos")
+
+
+# Adjust cart item quantity directly from POS
+@login_required(login_url="login")
+def update_cart_item(request, pro_id, action):
+    cart = request.session.get("cart", {})
+    p_id = str(pro_id)
+
+    if p_id in cart:
+        product = get_object_or_404(Product, pro_id=pro_id)
+        current_qty = cart[p_id].get("quantity", 0)
+
+        if action == "increase":
+            if product.qty > current_qty:
+                cart[p_id]["quantity"] += 1
+                messages.success(request, f"ເພີ່ມ {product.pro_name} ໃນກະຕ່າແລ້ວ")
+            else:
+                messages.error(request, f"ສິນຄ້າ {product.pro_name} ບໍ່ມີສະຕ໋ອກພຽງພໍ")
+        elif action == "decrease":
+            cart[p_id]["quantity"] -= 1
+            if cart[p_id]["quantity"] <= 0:
+                del cart[p_id]
+                messages.success(request, "ລຶບສິນຄ້າອອກຈາກກະຕ່າແລ້ວ")
+            else:
+                messages.success(request, f"ຫຼຸດ {product.pro_name} ໃນກະຕ່າແລ້ວ")
+        else:
+            messages.error(request, "ການດຳເນີນງານບໍ່ຖືກຕ້ອງ")
+
+        request.session["cart"] = cart
+        request.session.modified = True
+    else:
+        messages.error(request, "ບໍ່ພົບລາຍການນີ້ໃນກະຕ່າ")
+
     return redirect("pos")
 
 
@@ -389,6 +422,21 @@ def checkout(request):
             sale_id=sale_id, total_amount=grand_total, discount=discount,
             vat_rate=7.00, emp=emp, cus=customer, status=status
         )
+
+        if status == "Paid":
+            try:
+                Payment.objects.create(
+                    pay_id=f"PAY-{sale_id}",
+                    sale=new_sale,
+                    amount=Decimal(str(amount_paid)),
+                    payment_method="Cash",
+                    status="Completed",
+                    notes="Paid at checkout",
+                )
+            except Exception as exc:
+                new_sale.delete()
+                messages.error(request, f"ບັນທຶກການຊຳລະລົ້ມເຫຼວ: {exc}")
+                return redirect("pos")
 
         for pid, item in cart.items():
             product = Product.objects.get(pro_id=pid)
@@ -1095,6 +1143,7 @@ def create_sale(request):
 def sale_detail(request, pk):
     sale = get_object_or_404(Sale, sale_id=pk)
     details = SaleDetail.objects.filter(sale=sale)
+    payments = Payment.objects.filter(sale=sale).order_by('-payment_date')
     
     # ເພີ່ມ Logic ອັດຕາແລກປ່ຽນ (ເພື່ອໃຫ້ໜ້າ Detail ເບິ່ງຄືໜ້າ Invoice)
     ex_thb = 750
@@ -1103,6 +1152,7 @@ def sale_detail(request, pk):
     context = {
         'sale': sale,
         'details': details,
+        'payments': payments,
         'total_thb': sale.total_amount / ex_thb,
         'total_usd': sale.total_amount / ex_usd,
         'shop': ShopInfo.objects.first(),

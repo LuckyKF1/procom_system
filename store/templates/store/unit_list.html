@@ -60,6 +60,10 @@
                                     <form method="POST" action="{% url 'edit_unit' u.unit_id %}">
                                         {% csrf_token %}
                                         <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="small fw-bold text-muted mb-2">ລະຫັດຫົວໜ່ວຍ</label>
+                                                <input type="text" value="{{ u.unit_id }}" class="form-control shadow-none" disabled>
+                                            </div>
                                             <div class="mb-2">
                                                 <label class="small fw-bold text-muted mb-2">ຊື່ຫົວໜ່ວຍໃໝ່</label>
                                                 <input type="text" name="unit_name" value="{{ u.unit_name }}" class="form-control shadow-none" required>
