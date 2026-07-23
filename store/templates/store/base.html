@@ -78,6 +78,153 @@
         .btn { border-radius: 12px; font-weight: 600; padding: 10px 20px; }
         .btn-primary { background-color: #4318ff; border-color: #4318ff; }
         .form-control, .form-select { border-radius: 12px; padding: 12px 15px; background-color: #fcfcfc; }
+
+        /* ========================================
+           MOBILE RESPONSIVE STYLES (Max 768px)
+           ======================================== */
+        @media (max-width: 768px) {
+            /* Navbar adjustments */
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            .navbar-brand img, 
+            .navbar-brand .text-white {
+                width: 36px !important;
+                height: 36px !important;
+            }
+            
+            /* Mobile menu items */
+            .navbar-collapse {
+                background-color: #ffffff;
+                padding: 15px;
+                border-radius: 15px;
+                margin-top: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+            
+            .navbar-nav .nav-item {
+                margin-bottom: 8px;
+            }
+            
+            .nav-link {
+                padding: 12px 15px !important;
+                font-size: 0.9rem;
+            }
+            
+            .nav-link i {
+                font-size: 1.1rem;
+            }
+            
+            /* Dropdown in mobile */
+            .dropdown-menu {
+                box-shadow: none;
+                border: 1px solid #f0f0f0;
+                margin-left: 20px;
+            }
+            
+            .dropdown-item {
+                padding: 10px 15px !important;
+            }
+            
+            /* User profile dropdown */
+            .navbar .dropdown > a {
+                font-size: 0.85rem;
+            }
+            
+            .navbar .dropdown .rounded-circle {
+                width: 32px !important;
+                height: 32px !important;
+            }
+            
+            .navbar .dropdown span {
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            
+            /* Container padding */
+            .container {
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+            }
+            
+            /* Cards in mobile */
+            .card {
+                border-radius: 15px;
+                margin-bottom: 15px;
+            }
+            
+            /* Buttons in mobile - larger touch targets */
+            .btn {
+                padding: 12px 18px;
+                font-size: 0.9rem;
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            
+            .btn-sm {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+            
+            /* Form controls */
+            .form-control, .form-select {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            
+            /* Tables - horizontal scroll */
+            .table-responsive {
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            }
+            
+            table {
+                min-width: 600px;
+            }
+            
+            /* Dashboard stats cards */
+            .row .col-md-3,
+            .row .col-lg-3,
+            .row .col-sm-6 {
+                margin-bottom: 15px;
+            }
+            
+            /* Alerts */
+            .alert {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Extra small devices (phones less than 576px) */
+        @media (max-width: 576px) {
+            .navbar-brand {
+                font-size: 1rem;
+            }
+            
+            .nav-link {
+                font-size: 0.85rem;
+                padding: 10px 12px !important;
+            }
+            
+            .card {
+                border-radius: 12px;
+            }
+            
+            h1, .h1 {
+                font-size: 1.5rem;
+            }
+            
+            h2, .h2 {
+                font-size: 1.3rem;
+            }
+            
+            h3, .h3 {
+                font-size: 1.1rem;
+            }
+        }
     </style>
 </head>
 <body>
