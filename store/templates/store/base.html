@@ -136,6 +136,12 @@
                         </ul>
                     </li>
 
+                    {% comment %} <li class="nav-item">
+                        <a class="nav-link {% if 'promotion' in request.path %}active{% endif %}" href="{% url 'promotion_list' %}">
+                            <i class="bi bi-gift-fill"></i> ໂປຣໂມຊັນ
+                        </a>
+                    </li> {% endcomment %}
+
                     <li class="nav-item">
                         <a class="nav-link {% if 'claim' in request.path %}active{% endif %}" href="{% url 'claim_list' %}">
                             <i class="bi bi-tools"></i> ເຄມສິນຄ້າ

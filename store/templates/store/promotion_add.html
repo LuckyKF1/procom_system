@@ -1,0 +1,47 @@
+{% extends 'store/base.html' %}
+
+{% block title %}ເພີ່ມໂປຣໂມຊັນໃໝ່ - Procom POS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'promotion_list' %}" class="btn btn-light shadow-sm me-3" style="border-radius: 12px; color: #2b3674;">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0" style="color: #2b3674;">ເພີ່ມໂປຣໂມຊັນໃໝ່</h3>
+                <p class="text-muted small mb-0">ກະລຸນາໃສ່ຂໍ້ມູນລາຍລະອຽດຂອງໂປຣໂມຊັນສ່ວນຫຼຸດລຸ່ມນີ້</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4" style="border-radius: 20px;">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    {% for field in form %}
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text text-muted small">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a href="{% url 'promotion_list' %}" class="btn btn-light px-4" style="color: #a3aed1; font-weight: 600;">ຍົກເລີກ</a>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm" style="background-color: #4318ff; border: none;">
+                        <i class="bi bi-check-lg me-1"></i> ບັນທຶກຂໍ້ມູນໂປຣໂມຊັນ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

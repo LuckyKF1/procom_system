@@ -1,0 +1,52 @@
+{% extends 'store/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container my-4">
+    <h3 class="mb-3">ຊຳລະເງິນ (Checkout)</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="cus_id" class="form-label">ລູກຄ້າ (Customer ID)</label>
+            <input type="text" class="form-control" name="cus_id" id="cus_id" required>
+        </div>
+        <div class="mb-3">
+            <label for="amount_paid" class="form-label">ຈໍານວນເງິນທີ່ຈ່າຍ (Amount Paid)</label>
+            <input type="number" step="0.01" class="form-control" name="amount_paid" id="amount_paid" required>
+        </div>
+        <div class="mb-3">
+            <label for="payment_method" class="form-label">ວິທີຊຳລະ</label>
+            <select name="payment_method" id="payment_method" class="form-select">
+                <option value="Cash">Cash</option>
+                <option value="Transfer">Transfer</option>
+                <option value="QR">QR</option>
+                <option value="Card">Card</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="reference_no" class="form-label">ເລກອ້າງອິງ / Ref No.</label>
+            <input type="text" class="form-control" name="reference_no" id="reference_no" placeholder="ຫາກມີ">
+        </div>
+        <div class="mb-3">
+            <label for="bank_name" class="form-label">ທະນາຄານ / ອົງການຈັດການ</label>
+            <input type="text" class="form-control" name="bank_name" id="bank_name" placeholder="ຫາກມີ">
+        </div>
+        <div class="mb-3">
+            <label for="discount" class="form-label">ສ່ວນຫຼຸດດ້ວຍຕົນ (Optional Discount)</label>
+            <input type="number" step="0.01" class="form-control" name="discount" id="discount" placeholder="0.00">
+        </div>
+        <div class="mb-3">
+            <label for="promo_code" class="form-label">ໂປຣໂມຊັ່ນ (Promotion)</label>
+            <select name="promo_code" id="promo_code" class="form-select">
+                <option value="">-- ບໍ່ໃຊ້ໂປຣໂມຊັ່ນ --</option>
+                {% for p in Promotion.objects.filter(active=True, start_date__lte=timezone.now().date, end_date__gte=timezone.now().date) %}
+                    <option value="{{ p.code }}">
+                        {{ p.code }} – {{ p.get_discount_type_display }} {{ p.value }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success">ຢືນຢັນຊຳລະ</button>
+        <a href="{% url 'pos' %}" class="btn btn-secondary ms-2">ຍົກເລີກ</a>
+    </form>
+</div>
+{% endblock %}

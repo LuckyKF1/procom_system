@@ -30,11 +30,18 @@
                 <div class="mb-3">
                     {% if sale.status == 'Paid' %}
                         <span class="badge bg-success rounded-pill px-3">ຊຳລະແລ້ວ</span>
+                    {% elif sale.status == 'Partial' %}
+                        <span class="badge bg-info text-dark rounded-pill px-3">ຊຳລະບາງສ່ວນ</span>
                     {% elif sale.status == 'Unpaid' or sale.status == 'Quotation' %}
                         <span class="badge bg-warning text-dark rounded-pill px-3">ຄ້າງຊຳລະ / ໃບສະເໜີລາຄາ</span>
                     {% else %}
                         <span class="badge bg-secondary rounded-pill px-3">{{ sale.status }}</span>
                     {% endif %}
+                </div>
+                <div class="small text-muted">
+                    <div>ຈ່າຍລວມ: {{ amount_paid|floatformat:"0g" }} ກີບ</div>
+                    <div>ຈ່າຍເກີນ: {{ change_due|floatformat:"0g" }} ກີບ</div>
+                    <div>ຍັງຄ້າງ: {{ balance_due|floatformat:"0g" }} ກີບ</div>
                 </div>
 
                 {% if sale.status == 'Unpaid' or sale.status == 'Quotation' %}
@@ -51,7 +58,32 @@
                     </a>
                 </div>
                 {% endif %}
-            </div> {% if sale.status == 'Paid' %}
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 mt-3">
+                <h6 class="fw-bold mb-3"><i class="bi bi-credit-card me-2"></i> ການຊຳລະເງິນ</h6>
+                {% if payments %}
+                    {% for payment in payments %}
+                    <div class="border rounded-3 p-3 mb-2 bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">{{ payment.payment_method }}</span>
+                            <span class="badge bg-success rounded-pill">{{ payment.status }}</span>
+                        </div>
+                        <div class="small text-muted mt-2">
+                            <div>ຈຳນວນ: {{ payment.amount }} ກີບ</div>
+                            <div>ວັນທີ: {{ payment.payment_date|date:"d/m/Y H:i" }}</div>
+                            {% if payment.reference_no %}<div>Ref: {{ payment.reference_no }}</div>{% endif %}
+                            {% if payment.bank_name %}<div>Bank: {{ payment.bank_name }}</div>{% endif %}
+                            {% if payment.notes %}<div>ໝາຍເຫດ: {{ payment.notes }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-muted small">ຍັງບໍ່ມີຂໍ້ມູນການຊຳລະ</div>
+                {% endif %}
+            </div>
+
+            {% if sale.status == 'Paid' %}
             <div class="card border-0 shadow-sm rounded-4 p-4 mt-3 bg-light">
                 <h6 class="fw-bold mb-3"><i class="bi bi-truck me-2"></i> ການຈັດສົ່ງ (Shipping)</h6>
                 

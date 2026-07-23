@@ -1,0 +1,37 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container my-4">
+    <h3 class="mb-3">ຂໍ້ມູນໂປຣໂມຊັ່ນ</h3>
+    <a href="{% url 'promotion_add' %}" class="btn btn-primary mb-3">ເພີ່ມໂປຣໂມຊັ່ນ</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>ປະເພດສ່ວນຫຼຸດ</th>
+                <th>ມູນຄ່າ</th>
+                <th>ໄລຍະເວລາ</th>
+                <th>ໃຊ້ງານ</th>
+                <th>ຈັດການ</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for p in promotions %}
+            <tr>
+                <td>{{ p.code }}</td>
+                <td>{{ p.get_discount_type_display }}</td>
+                <td>{{ p.value }}</td>
+                <td>{{ p.start_date }} – {{ p.end_date }}</td>
+                <td>{{ p.active|yesno:"ໃຊ້,ບໍ່ໃຊ້" }}</td>
+                <td>
+                    <a href="{% url 'promotion_edit' p.code %}" class="btn btn-sm btn-outline-primary">ແກ້ໄຂ</a>
+                    <a href="{% url 'promotion_delete' p.code %}" onclick="return confirm('ລຶບໂປຣໂມຊັ່ນ {{ p.code }}?');" class="btn btn-sm btn-outline-danger">ລຶບ</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="text-center">ບໍ່ມີໂປຣໂມຊັ່ນ</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

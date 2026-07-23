@@ -69,10 +69,19 @@
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
                         <h5 class="fw-bold mb-1" style="color: #2b3674;">ແນວໂນ້ມການຂາຍ</h5>
-                        <p class="text-muted small">ຍອດລວມການຂາຍ 7 ວັນຍ້ອນຫຼັງ</p>
+                        <p class="text-muted small" id="trendPeriodText">ຍອດລວມການຂາຍ 7 ວັນຍ້ອນຫຼັງ</p>
                     </div>
                     <div class="dropdown">
-                        <button class="btn btn-light btn-sm rounded-3" type="button"><i class="bi bi-three-dots"></i></button>
+                        <button class="btn btn-light btn-sm rounded-3 dropdown-toggle" type="button" id="salesTrendMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="salesTrendMenu">
+                            <li><button class="dropdown-item active" type="button" onclick="updateChart(7, this)">7 ວັນ</button></li>
+                            <li><button class="dropdown-item" type="button" onclick="updateChart(14, this)">14 ວັນ</button></li>
+                            <li><button class="dropdown-item" type="button" onclick="updateChart(30, this)">30 ວັນ</button></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item" type="button" onclick="openCustomDateModal()">ກຳໜົດເອງ</button></li>
+                        </ul>
                     </div>
                 </div>
                 <div style="height: 300px;">
@@ -166,64 +175,171 @@
 
 </div>
 
+<!-- Modal for Custom Date Range -->
+<div class="modal fade" id="customDateModal" tabindex="-1" aria-labelledby="customDateLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+            <div class="modal-header border-0 bg-light">
+                <h5 class="modal-title fw-bold" id="customDateLabel" style="color: #2b3674;">ເລືອກຊ່ວງວັນທີ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="startDate" class="form-label fw-bold">ວັນທີເລີ່ມຕົ້ນ</label>
+                    <input type="date" class="form-control rounded-3" id="startDate">
+                </div>
+                <div class="mb-3">
+                    <label for="endDate" class="form-label fw-bold">ວັນທີສິ້ນສຸດ</label>
+                    <input type="date" class="form-control rounded-3" id="endDate">
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">ຍົກເລີກ</button>
+                <button type="button" class="btn btn-primary rounded-3" onclick="updateChartWithCustomDate()">ສະແດງ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('salesChart').getContext('2d');
+    let chartInstance = null;
+    let currentPeriodDays = 7;
     
-    // ສ້າງ Gradient Fill
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(67, 24, 255, 0.2)');
-    gradient.addColorStop(1, 'rgba(67, 24, 255, 0)');
+    // Initialize Chart
+    function initChart(labels, data) {
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(67, 24, 255, 0.2)');
+        gradient.addColorStop(1, 'rgba(67, 24, 255, 0)');
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {{ sales_labels|safe }},
-            datasets: [{
-                label: 'ຍອດຂາຍ (ກີບ)',
-                data: {{ sales_data|safe }},
-                borderColor: '#4318ff',
-                backgroundColor: gradient, // ໃຊ້ gradient ທີ່ສ້າງໄວ້
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#4318ff',
-                pointBorderColor: '#fff',
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true, // ປ່ຽນຈາກ True ເປັນ true
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1b2559',
-                    titleFont: { size: 13 },
-                    bodyFont: { size: 13 },
-                    padding: 10,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return 'ຍອດຂາຍ: ' + context.parsed.y.toLocaleString() + ' ກີບ';
-                        }
-                    }
-                }
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'ຍອດຂາຍ (ກີບ)',
+                    data: data,
+                    borderColor: '#4318ff',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#4318ff',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
             },
-            scales: {
-                y: { 
-                    beginAtZero: true, 
-                    grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString();
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1b2559',
+                        titleFont: { size: 13 },
+                        bodyFont: { size: 13 },
+                        padding: 10,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return 'ຍອດຂາຍ: ' + context.parsed.y.toLocaleString() + ' ກີບ';
+                            }
                         }
                     }
                 },
-                x: { grid: { display: false } }
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
             }
+        });
+    }
+
+    // Update chart with preset days
+    function updateChart(days, button) {
+        currentPeriodDays = days;
+
+        // Update dropdown item active state
+        document.querySelectorAll('#salesTrendMenu + .dropdown-menu .dropdown-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        if (button) {
+            button.classList.add('active');
         }
+
+        // Fetch data from API
+        fetch(`/api/sales-trend/?days=${days}`)
+            .then(response => response.json())
+            .then(data => {
+                const trendText = `ຍອດລວມການຂາຍ ${days} ວັນຍ້ອນຫຼັງ`;
+                document.getElementById('trendPeriodText').textContent = trendText;
+                initChart(data.labels, data.data);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function openCustomDateModal() {
+        document.querySelectorAll('#salesTrendMenu + .dropdown-menu .dropdown-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        const modal = new bootstrap.Modal(document.getElementById('customDateModal'));
+        modal.show();
+    }
+
+    // Update chart with custom date range
+    function updateChartWithCustomDate() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (!startDate || !endDate) {
+            alert('ກະລຸນາເລືອກວັນທີທັງສອງ');
+            return;
+        }
+        
+        // Fetch data from API
+        fetch(`/api/sales-trend/?start_date=${startDate}&end_date=${endDate}`)
+            .then(response => response.json())
+            .then(data => {
+                const trendText = `ຍອດລວມການຂາຍຕັ້ງແຕ່ ${startDate} ຫາ ${endDate}`;
+                document.getElementById('trendPeriodText').textContent = trendText;
+                initChart(data.labels, data.data);
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('customDateModal'));
+                if (modal) {
+                    modal.hide();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Initialize with default data on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initChart({{ sales_labels|safe }}, {{ sales_data|safe }});
+        
+        // Set max date for end date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('endDate').value = today;
+        document.getElementById('endDate').max = today;
+        
+        // Set start date to 30 days ago
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
     });
 </script>
 {% endblock %}

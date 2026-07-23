@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
-    Employee, Customer, Supplier, Category, Brand, Unit, 
-    Product, ShopInfo, StockImport, ImportDetail, 
+    Employee, Customer, Supplier, Category, Brand, Unit, Promotion,
+    Product, ShopInfo, StockImport, ImportDetail,
     Sale, SaleDetail, Shipping, Claim
 )
 from django.urls import path, include
@@ -34,4 +34,10 @@ admin.site.register(ImportDetail)
 admin.site.register(SaleDetail)
 admin.site.register(Shipping)
 admin.site.register(Claim)
+
+@admin.register(Promotion)
+class PromotionAdmin(admin.ModelAdmin):
+    list_display = ('code','discount_type','value','start_date','end_date','active')
+    list_filter = ('discount_type','active')
+    search_fields = ('code',)
 

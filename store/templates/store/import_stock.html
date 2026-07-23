@@ -10,12 +10,17 @@
             <h4 class="fw-bold mb-1" style="color: #2b3674;">ຮັບເຂົ້າສິນຄ້າ (Import Stock)</h4>
         </div>
 
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
+
+            <div class="alert alert-light border mb-4" role="alert" style="border-radius: 15px;">
+                <div class="fw-bold mb-2"><i class="bi bi-info-circle me-2"></i> ວິທີການຮັບເຂົ້າ</div>
+                <div class="small text-muted">ທ່ານສາມາດໃຊ້ການປ້ອນດ່ຽວຫຼືອັບໂຫຼດໄຟລ໌ CSV ສຳລັບການນຳເຂົ້າຫຼາຍລາຍການໄດ້.</div>
+            </div>
             
             <div class="mb-3">
                 <label class="fw-bold mb-2">ຜູ້ສະໜອງ (Supplier) <span class="text-danger">*</span></label>
-                <select name="sup_id" class="form-select form-select-lg" required>
+                <select name="sup_id" class="form-select form-select-lg">
                     <option value="">-- ເລືອກຜູ້ສະໜອງ --</option>
                     {% for s in suppliers %}
                         <option value="{{ s.sup_id }}">{{ s.company_name }}</option>
@@ -25,7 +30,7 @@
 
             <div class="mb-3">
                 <label class="fw-bold mb-2">ເລືອກສິນຄ້າ (Product) <span class="text-danger">*</span></label>
-                <select name="pro_id" class="form-select form-select-lg" required>
+                <select name="pro_id" class="form-select form-select-lg">
                     <option value="">-- ເລືອກສິນຄ້າ --</option>
                     {% for p in products %}
                         <option value="{{ p.pro_id }}">{{ p.pro_name }} (ຄັງ: {{ p.qty }})</option>
@@ -36,12 +41,18 @@
             <div class="row g-3 mb-4">
                 <div class="col-6">
                     <label class="fw-bold mb-2">ຈຳນວນ <span class="text-danger">*</span></label>
-                    <input type="number" name="qty" class="form-control form-control-lg fw-bold" placeholder="0" min="1" required style="color: #05cd99;">
+                    <input type="number" name="qty" class="form-control form-control-lg fw-bold" placeholder="0" min="1" style="color: #05cd99;">
                 </div>
                 <div class="col-6">
                     <label class="fw-bold mb-2">ຕົ້ນທຶນ/ໜ່ວຍ (ກີບ) <span class="text-danger">*</span></label>
-                    <input type="number" name="price" class="form-control form-control-lg fw-bold" placeholder="0" min="0" required>
+                    <input type="number" name="price" class="form-control form-control-lg fw-bold" placeholder="0" min="0">
                 </div>
+            </div>
+
+            <div class="mb-4 p-3 border rounded-4 bg-light">
+                <label class="fw-bold mb-2">ອັບໂຫຼດ CSV ສຳລັບການນຳເຂົ້າຫຼາຍລາຍການ</label>
+                <input type="file" name="import_file" class="form-control" accept=".csv,text/csv">
+                <div class="small text-muted mt-2">ຕົວຢ່າງ header: sup_id, pro_id, qty, price</div>
             </div>
 
             <button type="submit" class="btn btn-success w-100 py-3 fw-bold fs-5" style="border-radius: 15px; background-color: #05cd99; border-color: #05cd99;">

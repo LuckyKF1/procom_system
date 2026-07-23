@@ -1,19 +1,58 @@
-from datetime import timedelta
-from multiprocessing import context
+from decimal import Decimal
+from datetime import timedelta, datetime
 import random
-from urllib import request
-from django.db import models
 from django.db.models import Q, Sum, F, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.utils import timezone
 from django.contrib import messages
-from .forms import EmployeeForm
-from .models import Category
-from .models import Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Category, Brand, Unit, Claim, generate_sale_id
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime, parse_date
+from django.http import JsonResponse
+from .forms import EmployeeForm, PromotionForm
+from .models import Category, Promotion, Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Brand, Unit, Payment, generate_sale_id
 
+def superuser_passes_test(user):
+    return user.is_superuser
+
+# Promotion Management Views
+@login_required(login_url="login")
+@user_passes_test(superuser_passes_test, login_url="dashboard")
+def promotion_add(request):
+    if request.method == 'POST':
+        form = PromotionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('promotion_list')
+    else:
+        form = PromotionForm()
+    
+    return render(request, 'store/promotion_add.html', {'form': form})
+
+@user_passes_test(superuser_passes_test)
+def promotion_list(request):
+    promotions = Promotion.objects.all().order_by('-start_date')
+    return render(request, 'store/promotion_list.html', {'promotions': promotions})
+
+@user_passes_test(superuser_passes_test)
+def promotion_edit(request, code):
+    promotion = get_object_or_404(Promotion, code=code)
+    if request.method == 'POST':
+        form = PromotionForm(request.POST, instance=promotion)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'\u0e01\u0e31\u0e44\u0e34ล \u0e23\u0e01ั้รำม \u0e31ื\u0e49\u0e27 \u0e25\u0e38\u0e32 \u0e01\u0e31\u0e44\u0e34 \u0e07\u0e49 {code}')
+            return redirect('promotion_list')
+    else:
+        form = PromotionForm(instance=promotion)
+    return render(request, 'store/promotion_edit.html', {'form': form, 'promotion': promotion})
+
+@user_passes_test(superuser_passes_test)
+def promotion_delete(request, code):
+    promotion = get_object_or_404(Promotion, code=code)
+    promotion.delete()
+    messages.success(request, f'\u0e01\u0e49\u0e40\u0e49 \u0e23\u0e01ั้\u0e23ำ\u0e21 \u0e31\u0e37\u0e49\u0e27 \u0e25\u0e38\u0e32 \u0e01\u0e31\u0e44\u0e34 \u0e07\u0e49 {code}')
+    return redirect('promotion_list')
 @login_required(login_url="login")
 def shop_settings(request):
     shop = ShopInfo.objects.first()
@@ -75,6 +114,57 @@ def login_view(request):
 
 def is_admin(user):
     return user.is_superuser
+
+
+# API: Get sales trend data
+@login_required(login_url="login")
+def sales_trend_api(request):
+    """
+    API endpoint to get sales trend data for different date ranges.
+    Query parameters:
+    - days: number of days to go back (default: 7)
+    - start_date: start date in YYYY-MM-DD format
+    - end_date: end date in YYYY-MM-DD format
+    """
+    days = request.GET.get('days', 7)
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    try:
+        days = int(days)
+    except (ValueError, TypeError):
+        days = 7
+    
+    today = timezone.now().date()
+    
+    # Determine date range
+    if start_date and end_date:
+        # Custom date range
+        try:
+            start = parse_date(start_date)
+            end = parse_date(end_date)
+        except (ValueError, TypeError):
+            return JsonResponse({'error': 'Invalid date format'}, status=400)
+    else:
+        # Days-based range
+        start = today - timedelta(days=days-1)
+        end = today
+    
+    # Generate labels and data
+    sales_labels = []
+    sales_data = []
+    current_date = start
+    
+    while current_date <= end:
+        daily_total = Sale.objects.filter(sale_date__date=current_date).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        sales_labels.append(current_date.strftime('%d/%m'))
+        sales_data.append(float(daily_total))
+        current_date += timedelta(days=1)
+    
+    return JsonResponse({
+        'labels': sales_labels,
+        'data': sales_data
+    })
 
 
 # ຟັງຊັນອອກຈາກລະບົບ (Logout)
@@ -174,7 +264,8 @@ def product_list(request):
 @login_required(login_url="login")
 def pos(request):
     search_query = request.GET.get("search", "")
-    products = Product.objects.filter(qty__gt=0).order_by("pro_name")
+    selected_category = request.GET.get("category", "")
+    products = Product.objects.filter(qty__gt=0).select_related('cat', 'brand', 'unit').order_by("pro_name")
 
     if search_query:
         products = products.filter(
@@ -184,6 +275,10 @@ def pos(request):
             Q(brand__brand_name__icontains=search_query)
         ).distinct()
 
+    if selected_category:
+        products = products.filter(cat__cat_id=selected_category)
+
+    categories = Category.objects.all().order_by("cat_name")
     customers = Customer.objects.all()
     
     # ດຶງຂໍ້ມູນ Cart ມາຄິດໄລ່ຍອດລວມເພື່ອສົ່ງໄປ Dashboard ນ້ອຍໆໃນ POS
@@ -194,10 +289,12 @@ def pos(request):
     context = {
         "products": products,
         "customers": customers,
+        "categories": categories,
         "cart": cart,  # ສົ່ງ cart ໄປໃຫ້ {% if cart %} ໃນ HTML ເຮັດວຽກໄດ້
         "total_price": total_price,
         "total_items": total_items,
         "search_query": search_query,
+        "selected_category": selected_category,
     }
     return render(request, "store/pos.html", context)
 
@@ -232,6 +329,40 @@ def add_to_cart(request, pro_id):
         messages.error(request, f"ຂໍໂທດ! ສິນຄ້າ {product.pro_name} ໃນສະຕັອກບໍ່ພໍ.")
 
     # ກັບໄປໜ້າ POS (ຈະ Redirect ໄປບ່ອນເກົ່າທີ່ກົດ)
+    return redirect("pos")
+
+
+# Adjust cart item quantity directly from POS
+@login_required(login_url="login")
+def update_cart_item(request, pro_id, action):
+    cart = request.session.get("cart", {})
+    p_id = str(pro_id)
+
+    if p_id in cart:
+        product = get_object_or_404(Product, pro_id=pro_id)
+        current_qty = cart[p_id].get("quantity", 0)
+
+        if action == "increase":
+            if product.qty > current_qty:
+                cart[p_id]["quantity"] += 1
+                messages.success(request, f"ເພີ່ມ {product.pro_name} ໃນກະຕ່າແລ້ວ")
+            else:
+                messages.error(request, f"ສິນຄ້າ {product.pro_name} ບໍ່ມີສະຕ໋ອກພຽງພໍ")
+        elif action == "decrease":
+            cart[p_id]["quantity"] -= 1
+            if cart[p_id]["quantity"] <= 0:
+                del cart[p_id]
+                messages.success(request, "ລຶບສິນຄ້າອອກຈາກກະຕ່າແລ້ວ")
+            else:
+                messages.success(request, f"ຫຼຸດ {product.pro_name} ໃນກະຕ່າແລ້ວ")
+        else:
+            messages.error(request, "ການດຳເນີນງານບໍ່ຖືກຕ້ອງ")
+
+        request.session["cart"] = cart
+        request.session.modified = True
+    else:
+        messages.error(request, "ບໍ່ພົບລາຍການນີ້ໃນກະຕ່າ")
+
     return redirect("pos")
 
 
@@ -292,6 +423,21 @@ def checkout(request):
             vat_rate=7.00, emp=emp, cus=customer, status=status
         )
 
+        if status == "Paid":
+            try:
+                Payment.objects.create(
+                    pay_id=f"PAY-{sale_id}",
+                    sale=new_sale,
+                    amount=Decimal(str(amount_paid)),
+                    payment_method="Cash",
+                    status="Completed",
+                    notes="Paid at checkout",
+                )
+            except Exception as exc:
+                new_sale.delete()
+                messages.error(request, f"ບັນທຶກການຊຳລະລົ້ມເຫຼວ: {exc}")
+                return redirect("pos")
+
         for pid, item in cart.items():
             product = Product.objects.get(pro_id=pid)
             SaleDetail.objects.create(sale=new_sale, pro=product, qty=item["quantity"], price=item["price"])
@@ -313,6 +459,27 @@ def edit_claim(request, claim_id):
     if request.method == "POST":
         claim.symptom = request.POST.get("symptom")
         claim.status = request.POST.get("status")
+        claim.delivered_by = request.POST.get("delivered_by", "").strip() or None
+
+        imported_at_value = request.POST.get("imported_at")
+        exported_at_value = request.POST.get("exported_at")
+
+        if imported_at_value:
+            imported_dt = parse_datetime(imported_at_value)
+            if imported_dt and timezone.is_naive(imported_dt):
+                imported_dt = timezone.make_aware(imported_dt)
+            claim.imported_at = imported_dt
+        else:
+            claim.imported_at = None
+
+        if exported_at_value:
+            exported_dt = parse_datetime(exported_at_value)
+            if exported_dt and timezone.is_naive(exported_dt):
+                exported_dt = timezone.make_aware(exported_dt)
+            claim.exported_at = exported_dt
+        else:
+            claim.exported_at = None
+
         claim.save()
         messages.success(request, f"ແກ້ໄຂຂໍ້ມູນການເຄມ {claim.claim_id} ສຳເລັດແລ້ວ!")
         return redirect("claim_list")
@@ -456,6 +623,7 @@ def add_claim(request):
                 emp=emp,
                 symptom=symptom,
                 status=status,
+                imported_at=timezone.now(),
             )
             messages.success(request, f"ບັນທຶກການເຄມ {claim_id} ສຳເລັດແລ້ວ! (ຍັງເຫຼືອປະກັນຮອດ: {sale_detail.warranty_end})")
             return redirect("claim_list")
@@ -691,10 +859,19 @@ def brand_list(request):
 
 @login_required(login_url="login")
 def unit_list(request):
-    units = Unit.objects.all()
+    units = Unit.objects.all().order_by("unit_id")
     if request.method == "POST":
-        unit_id = request.POST.get("unit_id")
-        unit_name = request.POST.get("unit_name")
+        unit_id = request.POST.get("unit_id", "").strip()
+        unit_name = request.POST.get("unit_name", "").strip()
+
+        if not unit_id or not unit_name:
+            messages.error(request, "ກະລຸນາປ້ອນລະຫັດແລະຊື່ຫົວໜ່ວຍ.")
+            return redirect("unit_list")
+
+        if Unit.objects.filter(unit_id=unit_id).exists():
+            messages.error(request, "ລະຫັດຫົວໜ່ວຍນີ້ມີໃນລະບົບແລ້ວ.")
+            return redirect("unit_list")
+
         Unit.objects.create(unit_id=unit_id, unit_name=unit_name)
         messages.success(request, "ເພີ່ມຫົວໜ່ວຍສຳເລັດ!")
         return redirect("unit_list")
@@ -757,7 +934,9 @@ def employee_edit(request, pk):
         if form.is_valid():
             emp_data = form.save(commit=False)
             
-            emp_data.password = form.cleaned_data.get('password')
+            new_password = form.cleaned_data.get('password')  # Only update password if provided
+            if new_password:
+                emp_data.password = new_password
             emp_data.save()
             
             messages.success(request, f'ແກ້ໄຂຂໍ້ມູນ {employee.emp_name} ສຳເລັດແລ້ວ!')
@@ -915,6 +1094,34 @@ def all_reports(request):
             claims = claims.filter(claim_date__date__range=[start_date, end_date])
         
         context['claims'] = claims
+
+    # --- 5.9 ລາຍງານບິນ (Receipts) ---
+    elif report_type == 'receipts':
+        receipts = Sale.objects.all().order_by("-sale_date")
+        
+        if selected_month:
+            year, month = map(int, selected_month.split('-'))
+            receipts = receipts.filter(sale_date__year=year, sale_date__month=month)
+        elif start_date and end_date:
+            receipts = receipts.filter(sale_date__date__range=[start_date, end_date])
+        elif not search_query:
+            # ຖ້າບໍ່ໄດ້ Search ແລະ ບໍ່ໄດ້ Filter ໃຫ້ໂຊເດືອນປັດຈຸບັນ
+            receipts = receipts.filter(sale_date__year=today.year, sale_date__month=today.month)
+        
+        if search_query:
+            receipts = receipts.filter(Q(sale_id__icontains=search_query) | Q(cus__cus_name__icontains=search_query))
+        
+        context['receipts'] = receipts
+        context['total_receipt_amount'] = receipts.aggregate(Sum("total_amount"))["total_amount__sum"] or 0
+        context['total_receipt_count'] = receipts.count()
+        
+        # ເກັບຕົວຢ່າງບິນ ສຳລັບ Display
+        ex_thb = 750
+        ex_usd = 21500
+        for receipt in receipts:
+            receipt.total_thb = receipt.total_amount / ex_thb
+            receipt.total_usd = receipt.total_amount / ex_usd
+            
     return render(request, "store/all_reports.html", context)
 
 def create_sale(request):
@@ -936,6 +1143,7 @@ def create_sale(request):
 def sale_detail(request, pk):
     sale = get_object_or_404(Sale, sale_id=pk)
     details = SaleDetail.objects.filter(sale=sale)
+    payments = Payment.objects.filter(sale=sale).order_by('-payment_date')
     
     # ເພີ່ມ Logic ອັດຕາແລກປ່ຽນ (ເພື່ອໃຫ້ໜ້າ Detail ເບິ່ງຄືໜ້າ Invoice)
     ex_thb = 750
@@ -944,6 +1152,7 @@ def sale_detail(request, pk):
     context = {
         'sale': sale,
         'details': details,
+        'payments': payments,
         'total_thb': sale.total_amount / ex_thb,
         'total_usd': sale.total_amount / ex_usd,
         'shop': ShopInfo.objects.first(),

@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
+    path('api/sales-trend/', views.sales_trend_api, name='sales_trend_api'),
     path('products/', views.product_list, name='product_list'),
     path('add_to_cart/<str:pro_id>/', views.add_to_cart, name='add_to_cart'),
     path('clear_cart/', views.clear_cart, name='clear_cart'),
@@ -14,6 +15,7 @@ urlpatterns = [
     path('claims/', views.claim_list, name='claim_list'),
     path('claims/add/', views.add_claim, name='add_claim'),
     path('remove-from-cart/<str:pro_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('update-cart-item/<str:pro_id>/<str:action>/', views.update_cart_item, name='update_cart_item'),
     path('shop-settings/', views.shop_settings, name='shop_settings'),
     path('import-stock/', views.import_stock, name='import_stock'),
     path('products/add/', views.add_product, name='add_product'),
@@ -28,9 +30,9 @@ urlpatterns = [
     path('categories/', views.category_list, name='category_list'),
     path('brands/', views.brand_list, name='brand_list'),
     path('units/', views.unit_list, name='unit_list'),
-    path('categories/delete/<str:cat_id>/', views.delete_category, name='delete_category'),
-    path('brands/delete/<str:brand_id>/', views.delete_brand, name='delete_brand'),
-    path('units/delete/<str:unit_id>/', views.delete_unit, name='delete_unit'),
+    path('categories/delete/<str:pk>/', views.delete_category, name='delete_category'),
+    path('brands/delete/<str:pk>/', views.delete_brand, name='delete_brand'),
+    path('units/delete/<str:pk>/', views.delete_unit, name='delete_unit'),
     path('suppliers/', views.supplier_list, name='supplier_list'),
     path('suppliers/delete/<str:pk>/', views.delete_supplier, name='delete_supplier'),
     path('supplier/edit/<str:pk>/', views.edit_supplier, name='edit_supplier'),
@@ -44,4 +46,9 @@ urlpatterns = [
     path('sale/<str:pk>/', views.sale_detail, name='sale_detail'),
     path('sale/add-shipping/<str:sale_id>/', views.add_shipping, name='add_shipping'),
     path('sale/update-status/<str:sale_id>/<str:new_status>/', views.update_sale_status, name='update_sale_status'),
+    # Promotion URLs
+    path('promotions/', views.promotion_list, name='promotion_list'),
+    path('promotions/add/', views.promotion_add, name='promotion_add'),
+    path('promotions/edit/<str:code>/', views.promotion_edit, name='promotion_edit'),
+    path('promotions/delete/<str:code>/', views.promotion_delete, name='promotion_delete'),
 ]
