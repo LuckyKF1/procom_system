@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-=xapv#5k-(-a1c)922qh9xx6p+m*s57r%#wvj)bdm649$b4ljc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'host.docker.internal']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://gilda-unpalisadoed-iteratively.ngrok-free.dev',
