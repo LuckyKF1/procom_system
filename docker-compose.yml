@@ -3,8 +3,8 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_DATABASE: procom_db
-      MYSQL_ROOT_PASSWORD: 1111111a
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-procom_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
     ports:
       - "3307:3306"
     volumes:
@@ -13,6 +13,16 @@ services:
   web:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-procom_db}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+      MYSQL_HOST: ${MYSQL_HOST:-db}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
     volumes:
       - .:/app
     ports:

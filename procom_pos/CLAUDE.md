@@ -10,13 +10,18 @@
 
 ## สภาพแวดล้อม Docker
 - `docker-compose.yml` มี service:
-  - `db`: mysql:8.0, root password `1111111a`, database `procom_db`
+  - `db`: mysql:8.0, database `procom_db` (root password อ่านจาก `MYSQL_PASSWORD` ในไฟล์ `.env`)
   - `web`: Django app ที่รันด้วย `python manage.py runserver 0.0.0.0:8000`
 - MySQL ถูกแมปพอร์ต `3307:3306` สำหรับโฮสต์
 - volume ชื่อ `mysql_data` เก็บข้อมูล MySQL
 
+## Environment variables
+- ค่าทั้งหมดอ่านจาก environment ไม่มีการ hardcode ใน `settings.py` อีกต่อไป: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_HOST`, `MYSQL_PORT`
+- คัดลอก `.env.example` เป็น `.env` แล้วเติมค่าก่อนรัน (ไฟล์ `.env` อยู่ใน `.gitignore`)
+- ถ้า `DJANGO_DEBUG=False` แล้วไม่ตั้ง `DJANGO_SECRET_KEY` ระบบจะ raise `ImproperlyConfigured` ทันที
+
 ## วิธีรันโปรเจกต์
-1. เปิด Docker Desktop ให้พร้อมใช้งาน
+1. เปิด Docker Desktop ให้พร้อมใช้งาน และสร้างไฟล์ `.env` จาก `.env.example`
 2. จากโฟลเดอร์โปรเจกต์:
    ```bash
    docker compose up --build
@@ -51,9 +56,10 @@
 
 ## ระบบล็อกอินและสิทธิ์
 - `store/views.py` มี `login_view`
-- ถ้า username/password ตรงกับ Django superuser จะล็อกอินเข้า `dashboard`
-- ถ้าไม่ใช่ admin จะตรวจสอบใน table `Employee` โดยใช้ plain text password
-- ถ้าพบพนักงาน จะสร้าง Django `User` ชั่วคราวเพื่อให้ session ทำงาน
+- ถ้า username/password ตรงกับ Django user จะล็อกอินเข้า `dashboard`
+- ถ้าไม่ใช่ จะตรวจสอบใน table `Employee` โดยเทียบรหัสผ่านที่ hash ไว้ (`check_employee_password`) — รหัสเก่าที่ยังเป็น plain text จะถูก hash ให้อัตโนมัติตอนล็อกอินสำเร็จครั้งแรก
+- ถ้าพบพนักงาน จะใช้ Django `User` ที่ไม่มีสิทธิ์พิเศษเพื่อเก็บ session (`employee_session_user`)
+- ถ้าชื่อพนักงานตรงกับบัญชี admin/staff หรือบัญชีที่มี permission ระบบจะปฏิเสธการล็อกอินทางช่องพนักงาน (กันการยกระดับสิทธิ์)
 - `login_view` ยังโหลดข้อมูล `ShopInfo.objects.first()` เพื่อแสดงข้อมูลร้านบนหน้า login
 
 ## โครงสร้างไฟล์หลัก
@@ -62,7 +68,7 @@
 - `store/models.py` — schema ของข้อมูลทั้งหมด
 - `store/views.py` — ฟังก์ชันหลักของระบบ
 - `store/urls.py` — เส้นทาง URL ของระบบ
-- `store/templates/store/` — หน้า HTML ของแต่ละฟังก์ชัน
+- `store/templates/store/` — หน้า HTML ของแต่ละฟังก์ชัน (การลบทั้งหมดเป็นฟอร์ม POST + CSRF token)
 - `store/forms.py` — ฟอร์มสำหรับพนักงาน / สินค้า
 
 ## เส้นทางสำคัญ (routes)

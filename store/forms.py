@@ -1,16 +1,24 @@
 from django import forms
+from django.contrib.auth.hashers import make_password
+
 from .models import Employee, Promotion, Supplier, Product
 
 class EmployeeForm(forms.ModelForm):
-    def clean_password(self):
-        password = self.cleaned_data.get('password')
-        return password if password else ''
+    password = forms.CharField(
+        required=False,
+        label='ລະຫັດຜ່ານ (Password)',
+        help_text='ປະໄວ້ຫວ່າງເປົ່າ ຖ້າບໍ່ຕ້ອງການປ່ຽນລະຫັດຜ່ານ',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'ປ້ອນລະຫັດຜ່ານ...'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._current_password = self.instance.password
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        if password := self.cleaned_data.get('password'):
-            from django.contrib.auth.hashers import make_password
-            instance.password = make_password(password)
+        new_password = self.cleaned_data.get('password')
+        instance.password = make_password(new_password) if new_password else self._current_password
         if commit:
             instance.save()
         return instance
@@ -23,14 +31,12 @@ class EmployeeForm(forms.ModelForm):
             'surname': 'ນາມສະກຸນ',
             'tel': 'ເບີໂທລະສັບ',
             'position': 'ຕຳແໜ່ງ',
-            'password': 'ລະຫັດຜ່ານ (Password)'
         }
         widgets = {
             'emp_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ປ້ອນຊື່...'}),
             'surname': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ປ້ອນນາມສະກຸນ...'}),
             'tel': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ປ້ອນເບີໂທ...'}),
             'position': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ປ້ອນຕຳແໜ່ງ...'}),
-            'password': forms.PasswordInput(render_value=True, attrs={'class': 'form-control', 'placeholder': 'ປ້ອນລະຫັດຜ່ານ...'}),
         }
 
 
