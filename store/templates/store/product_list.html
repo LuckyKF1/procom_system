@@ -97,7 +97,10 @@
                             <td class="py-3 text-center">
                                 <div class="d-flex justify-content-center gap-2">
                                     <a href="{% url 'edit_product' p.pro_id %}" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(67, 24, 255, 0.1); color: #4318ff; border-radius: 10px;" title="ແກ້ໄຂ"><i class="bi bi-pencil-fill"></i></a>
-                                    <a href="{% url 'delete_product' p.pro_id %}" onclick="return confirm('ທ່ານຕ້ອງການລຶບສິນຄ້າ {{ p.pro_name }} ແທ້ຫຼືບໍ່?');" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(238, 93, 80, 0.1); color: #ee5d50; border-radius: 10px;" title="ລຶບ"><i class="bi bi-trash3-fill"></i></a>
+                                    <form method="POST" action="{% url 'delete_product' p.pro_id %}" onsubmit="return confirm('ທ່ານຕ້ອງການລຶບສິນຄ້າ {{ p.pro_name }} ແທ້ຫຼືບໍ່?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background-color: rgba(238, 93, 80, 0.1); color: #ee5d50; border-radius: 10px;" title="ລຶບ"><i class="bi bi-trash3-fill"></i></button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

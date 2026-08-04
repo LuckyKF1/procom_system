@@ -44,9 +44,12 @@
                                 <button class="btn btn-sm text-primary me-2" data-bs-toggle="modal" data-bs-target="#editUnit{{ u.unit_id }}">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
-                                <a href="{% url 'delete_unit' u.unit_id %}" class="btn btn-sm text-danger" onclick="return confirm('ຢືນຢັນການລຶບຫົວໜ່ວຍນີ້?')">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </a>
+                                <form method="POST" action="{% url 'delete_unit' u.unit_id %}" class="d-inline" onsubmit="return confirm('ຢືນຢັນການລຶບຫົວໜ່ວຍນີ້?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm text-danger">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
 

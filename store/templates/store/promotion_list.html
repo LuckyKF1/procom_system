@@ -25,7 +25,10 @@
                 <td>{{ p.active|yesno:"ໃຊ້,ບໍ່ໃຊ້" }}</td>
                 <td>
                     <a href="{% url 'promotion_edit' p.code %}" class="btn btn-sm btn-outline-primary">ແກ້ໄຂ</a>
-                    <a href="{% url 'promotion_delete' p.code %}" onclick="return confirm('ລຶບໂປຣໂມຊັ່ນ {{ p.code }}?');" class="btn btn-sm btn-outline-danger">ລຶບ</a>
+                    <form method="POST" action="{% url 'promotion_delete' p.code %}" class="d-inline" onsubmit="return confirm('ລຶບໂປຣໂມຊັ່ນ {{ p.code }}?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">ລຶບ</button>
+                    </form>
                 </td>
             </tr>
         {% empty %}

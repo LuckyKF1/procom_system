@@ -5,10 +5,14 @@ from django.db.models import Q, Sum, F, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.hashers import check_password, identify_hasher, make_password
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.crypto import constant_time_compare
 from django.utils.dateparse import parse_datetime, parse_date
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .forms import EmployeeForm, PromotionForm
 from .models import Category, Promotion, Product, Sale, Claim, SaleDetail, Employee, Customer, Shipping, ShopInfo, Supplier, StockImport, ImportDetail, Brand, Unit, Payment, generate_sale_id
 
@@ -29,12 +33,14 @@ def promotion_add(request):
     
     return render(request, 'store/promotion_add.html', {'form': form})
 
-@user_passes_test(superuser_passes_test)
+@login_required(login_url="login")
+@user_passes_test(superuser_passes_test, login_url="dashboard")
 def promotion_list(request):
     promotions = Promotion.objects.all().order_by('-start_date')
     return render(request, 'store/promotion_list.html', {'promotions': promotions})
 
-@user_passes_test(superuser_passes_test)
+@login_required(login_url="login")
+@user_passes_test(superuser_passes_test, login_url="dashboard")
 def promotion_edit(request, code):
     promotion = get_object_or_404(Promotion, code=code)
     if request.method == 'POST':
@@ -47,7 +53,9 @@ def promotion_edit(request, code):
         form = PromotionForm(instance=promotion)
     return render(request, 'store/promotion_edit.html', {'form': form, 'promotion': promotion})
 
-@user_passes_test(superuser_passes_test)
+@login_required(login_url="login")
+@user_passes_test(superuser_passes_test, login_url="dashboard")
+@require_POST
 def promotion_delete(request, code):
     promotion = get_object_or_404(Promotion, code=code)
     promotion.delete()
@@ -76,13 +84,47 @@ def shop_settings(request):
     return render(request, "store/shop_settings.html", {"shop": shop})
 
 
+def check_employee_password(employee, raw_password):
+    # ທຽບລະຫັດຜ່ານພະນັກງານ ແລະ ອັບເກຣດລະຫັດເກົ່າແບບ Plain Text ໃຫ້ເປັນ Hash ອັດຕະໂນມັດ
+    if not raw_password or not employee.password:
+        return False
+
+    try:
+        identify_hasher(employee.password)
+    except ValueError:
+        if not constant_time_compare(employee.password, raw_password):
+            return False
+        employee.password = make_password(raw_password)
+        employee.save(update_fields=["password"])
+        return True
+
+    return check_password(raw_password, employee.password)
+
+
+def employee_session_user(employee):
+    # ດຶງ Django User ທີ່ບໍ່ມີສິດພິເສດສຳລັບເກັບ Session ຂອງພະນັກງານ
+    # ຖ້າຊື່ນັ້ນເປັນຂອງບັນຊີທີ່ມີສິດ (admin/staff) ຈະສົ່ງຄືນ None ເພື່ອບໍ່ໃຫ້ຍຶດສິດຂອງບັນຊີນັ້ນ
+    user = User.objects.filter(username=employee.emp_name).first()
+
+    if user is None:
+        user = User.objects.create_user(username=employee.emp_name)
+        user.set_unusable_password()
+        user.save(update_fields=["password"])
+        return user
+
+    if user.is_staff or user.is_superuser or user.groups.exists() or user.user_permissions.exists():
+        return None
+
+    return user
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
 
     if request.method == "POST":
-        u = request.POST.get("username")
-        p = request.POST.get("password")
+        u = (request.POST.get("username") or "").strip()
+        p = request.POST.get("password") or ""
 
         # 1. ລອງ Login ແບບ Standard Django ກ່ອນ (ສຳລັບ Superuser ທີ່ສ້າງຜ່ານ Docker)
         user = authenticate(request, username=u, password=p)
@@ -93,20 +135,20 @@ def login_view(request):
             return redirect("dashboard")
         
         # 2. ຖ້າບໍ່ແມ່ນ Admin, ໃຫ້ລອງກວດໃນ Table Employee (ສຳລັບພະນັກງານທຳມະດາ)
-        try:
-            emp = Employee.objects.get(emp_name=u)
-            if emp.password == p:  # ທຽບລະຫັດ 8 ຕົວແບບ Plain Text ຕາມທີ່ Lucky ຕ້ອງການ
-                # ສ້າງ Django User ໃຫ້ອັດຕະໂນມັດເພື່ອໃຫ້ລະບົບຈຳ Session ໄດ້
-                from django.contrib.auth.models import User
-                django_user, created = User.objects.get_or_create(username=emp.emp_name)
-                
+        emp = Employee.objects.filter(emp_name=u).first()
+
+        if emp is None:
+            messages.error(request, "ບໍ່ມີຊື່ຜູ້ໃຊ້ນີ້ໃນລະບົບ!")
+        elif not check_employee_password(emp, p):
+            messages.error(request, "ລະຫັດຜ່ານພະນັກງານບໍ່ຖືກຕ້ອງ!")
+        else:
+            django_user = employee_session_user(emp)
+            if django_user is None:
+                messages.error(request, "ບັນຊີນີ້ຕ້ອງເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດຜ່ານຂອງຜູ້ດູແລລະບົບ!")
+            else:
                 auth_login(request, django_user)
                 messages.success(request, f"ສະບາຍດີພະນັກງານ {emp.emp_name}!")
                 return redirect("dashboard")
-            else:
-                messages.error(request, "ລະຫັດຜ່ານພະນັກງານບໍ່ຖືກຕ້ອງ!")
-        except Employee.DoesNotExist:
-            messages.error(request, "ບໍ່ມີຊື່ຜູ້ໃຊ້ນີ້ໃນລະບົບ!")
 
     shop = ShopInfo.objects.first()
     return render(request, "store/login.html", {"shop": shop})
@@ -529,6 +571,7 @@ def edit_product(request, pro_id):
 
 # ຟັງຊັນສຳລັບລຶບສິນຄ້າ
 @login_required(login_url="login")
+@require_POST
 def delete_product(request, pro_id):
     product = get_object_or_404(Product, pro_id=pro_id)
     pro_name = product.pro_name  # ເກັບຊື່ໄວ້ສະແດງແຈ້ງເຕືອນກ່ອນລຶບ
@@ -808,10 +851,14 @@ def add_employee(request):
         surname = request.POST.get("surname")
         tel = request.POST.get("tel")
         position = request.POST.get("position")
-        password = request.POST.get("password") # ໃນລະບົບຈິງຄວນ Hash Password ກ່ອນ
+        password = request.POST.get("password")
 
         if Employee.objects.filter(emp_id=emp_id).exists():
             messages.error(request, "ລະຫັດພະນັກງານນີ້ມີໃນລະບົບແລ້ວ!")
+            return redirect("add_employee")
+
+        if not password:
+            messages.error(request, "ກະລຸນາປ້ອນລະຫັດຜ່ານຂອງພະນັກງານ!")
             return redirect("add_employee")
 
         Employee.objects.create(
@@ -820,7 +867,7 @@ def add_employee(request):
             surname=surname,
             tel=tel,
             position=position,
-            password=password
+            password=make_password(password)
         )
         messages.success(request, f"ເພີ່ມພະນັກງານ {emp_name} ສຳເລັດ!")
         return redirect("employee_list")
@@ -829,6 +876,7 @@ def add_employee(request):
 
 @login_required(login_url="login")
 @user_passes_test(is_admin, login_url="dashboard")
+@require_POST
 def delete_employee(request, emp_id):
     emp = get_object_or_404(Employee, emp_id=emp_id)
     emp.delete()
@@ -877,19 +925,26 @@ def unit_list(request):
         return redirect("unit_list")
     return render(request, "store/unit_list.html", {"units": units})
 
+@login_required(login_url="login")
+@require_POST
 def delete_category(request, pk):
     get_object_or_404(Category, pk=pk).delete()
     return redirect('category_list')
 
+@login_required(login_url="login")
+@require_POST
 def delete_brand(request, pk):
     get_object_or_404(Brand, pk=pk).delete()
     return redirect('brand_list')
 
+@login_required(login_url="login")
+@require_POST
 def delete_unit(request, pk):
     get_object_or_404(Unit, pk=pk).delete()
     return redirect('unit_list')
 
 # ແກ້ໄຂຜູ້ສະໜອງ
+@login_required(login_url="login")
 def edit_supplier(request, pk):
     instance = get_object_or_404(Supplier, pk=pk)
     if request.method == "POST":
@@ -901,6 +956,7 @@ def edit_supplier(request, pk):
     return redirect('supplier_list')
 
 # --- Edit Category ---
+@login_required(login_url="login")
 def edit_category(request, pk):
     instance = get_object_or_404(Category, pk=pk)
     if request.method == "POST":
@@ -910,6 +966,7 @@ def edit_category(request, pk):
     return redirect('category_list')
 
 # --- Edit Brand ---
+@login_required(login_url="login")
 def edit_brand(request, pk):
     instance = get_object_or_404(Brand, pk=pk)
     if request.method == "POST":
@@ -919,6 +976,7 @@ def edit_brand(request, pk):
     return redirect('brand_list')
 
 # --- Edit Unit ---
+@login_required(login_url="login")
 def edit_unit(request, pk):
     instance = get_object_or_404(Unit, pk=pk)
     if request.method == "POST":
@@ -927,18 +985,15 @@ def edit_unit(request, pk):
         messages.success(request, "ແກ້ໄຂຫົວໜ່ວຍສຳເລັດ!")
     return redirect('unit_list')
 
+@login_required(login_url="login")
+@user_passes_test(is_admin, login_url="dashboard")
 def employee_edit(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
         form = EmployeeForm(request.POST, instance=employee)
         if form.is_valid():
-            emp_data = form.save(commit=False)
-            
-            new_password = form.cleaned_data.get('password')  # Only update password if provided
-            if new_password:
-                emp_data.password = new_password
-            emp_data.save()
-            
+            form.save()
+
             messages.success(request, f'ແກ້ໄຂຂໍ້ມູນ {employee.emp_name} ສຳເລັດແລ້ວ!')
             return redirect('employee_list')
     else:
@@ -968,6 +1023,8 @@ def supplier_list(request):
         return redirect("supplier_list")
     return render(request, "store/supplier_list.html", {"suppliers": suppliers})
 
+@login_required(login_url="login")
+@require_POST
 def delete_supplier(request, pk):
     get_object_or_404(Supplier, pk=pk).delete()
     return redirect('supplier_list')
@@ -1014,6 +1071,7 @@ def edit_customer(request, cus_id):
 
 # ແຖມຟັງຊັນ Delete ໃຫ້ພ້ອມເພື່ອບໍ່ໃຫ້ Error ຮອບໜ້າ
 @login_required(login_url="login")
+@require_POST
 def delete_customer(request, cus_id):
     customer = get_object_or_404(Customer, cus_id=cus_id)
     customer.delete()
@@ -1140,6 +1198,7 @@ def create_sale(request):
         )
         new_sale.save()
         
+@login_required(login_url="login")
 def sale_detail(request, pk):
     sale = get_object_or_404(Sale, sale_id=pk)
     details = SaleDetail.objects.filter(sale=sale)
@@ -1159,20 +1218,23 @@ def sale_detail(request, pk):
     }
     return render(request, 'store/sale_detail.html', context)
 
+@login_required(login_url="login")
+@require_POST
 def add_shipping(request, sale_id):
-    if request.method == "POST":
-        sale_obj = get_object_or_404(Sale, sale_id=sale_id)
-        
-        Shipping.objects.update_or_create(
-            sale=sale_obj,
-            defaults={
-                'tracking_no': request.POST.get('tracking_no'),
-                'status': 'Shipped'
-            }
-        )
-        
-        return redirect('sale_detail', pk=sale_id)
-    
+    sale_obj = get_object_or_404(Sale, sale_id=sale_id)
+
+    Shipping.objects.update_or_create(
+        sale=sale_obj,
+        defaults={
+            'tracking_no': request.POST.get('tracking_no'),
+            'status': 'Shipped'
+        }
+    )
+
+    return redirect('sale_detail', pk=sale_id)
+
+@login_required(login_url="login")
+@require_POST
 def update_sale_status(request, sale_id, new_status):
     sale = get_object_or_404(Sale, sale_id=sale_id)
     
